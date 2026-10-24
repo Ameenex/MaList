@@ -1,0 +1,56 @@
+name: Accept MaList submission
+
+# A repo collaborator comments "/approve" (or "/reject") on a submission issue.
+# The script validates the data and commits it to data/data.json.
+on:
+  issue_comment:
+    types: [created]
+
+concurrency:
+  group: malist-data
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  issues: write
+  pages: write
+
+jobs:
+  accept:
+    if: ${{ !github.event.issue.pull_request && (startsWith(github.event.comment.body, '/approve') || startsWith(github.event.comment.body, '/reject')) }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate and update data file
+        id: prep
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { prepare } = require('./.github/scripts/accept-submission.js');
+            await prepare({ github, context, core });
+
+      - name: Commit data file
+        if: steps.prep.outputs.changed == 'true'
+        run: |
+          git config user.name "malist-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/data.json
+          git commit -m "data: add submission #${{ github.event.issue.number }}"
+          git pull --rebase origin main
+          git push origin main
+
+      - name: Trigger Pages rebuild
+        if: steps.prep.outputs.changed == 'true'
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh api -X POST "repos/${{ github.repository }}/pages/builds"
+
+      - name: Close the issue
+        if: steps.prep.outputs.changed == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { finalize } = require('./.github/scripts/accept-submission.js');
+            await finalize({ github, context });
