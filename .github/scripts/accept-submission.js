@@ -131,9 +131,9 @@ async function prepare({ github, context, core }) {
     return;
   }
 
-  let checked;
+  let checked, payload;
   try {
-    const payload = parsePayload(String(issue.body || ''));
+    payload = parsePayload(String(issue.body || ''));
     checked = validate(payload.type, payload.data);
   } catch (e) {
     await say(`Could not approve this submission: ${e.message}\n\nAsk the author to submit it again.`);
@@ -154,10 +154,16 @@ async function prepare({ github, context, core }) {
     return;
   }
 
+  // addedBy normally comes from GitHub, never from the submitted data. The one exception is
+  // the website's submission Worker, which opens issues under the repo owner's account: its
+  // issues carry the name the visitor typed, so credit that (or "Community") instead.
+  const viaWorker = issue.user.login.toLowerCase() === owner.toLowerCase();
+  const addedBy = viaWorker ? (clean(payload.submittedBy, 40) || 'Community') : issue.user.login;
+
   list.push({
     id,
     ...checked.item,
-    addedBy: issue.user.login, // taken from GitHub, never from the submitted data
+    addedBy,
     ts: Date.now(),
   });
   data.updated = new Date().toISOString();

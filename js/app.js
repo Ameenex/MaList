@@ -86,8 +86,8 @@ let shopsData = [], eventsData = [], commoditiesData = [], leaderboard = {}, adv
 // ---------- Data: community data file in the GitHub repo ----------
 // Approved community submissions live in data/data.json in this repo. The site only
 // READS that file; nothing on this page can write to the repo (so no token ever ships
-// in the page). New submissions go through a pre-filled GitHub issue, and the repo owner
-// approves them with "/approve" — a GitHub Action validates them and updates the file.
+// in the page). New submissions go through the MaList Worker, which opens a GitHub issue; the
+// repo owner approves them with "/approve" — a GitHub Action validates them and updates the file.
 const REPO = 'Ameenex/MaList';
 const POINTS = { shops: 10, events: 10, commodities: 15 };
 
@@ -177,14 +177,70 @@ let leaderboardIsSample = false;
 const SAMPLE_BADGE = '<span class="text-[9.5px] font-semibold px-1.5 py-0.5 rounded-md shrink-0" style="background:var(--surface-2); color:var(--muted); border:1px dashed var(--border);" title="Made-up example — not a real listing">Example</span>';
 
 
-// Opens a pre-filled GitHub issue for the submission. Must be called directly from a click
-// handler (no await before it) or browsers will block the new tab as a popup.
-function openSubmission(type, data, label) {
-  const payload = JSON.stringify({ v: 1, type, data });
-  const url = `https://github.com/${REPO}/issues/new?template=submission.yml`
-    + `&title=${encodeURIComponent('[MaList] ' + label.slice(0, 80))}`
-    + `&payload=${encodeURIComponent(payload)}`;
-  window.open(url, '_blank', 'noopener,noreferrer');
+// ---------- Sending submissions ----------
+// Forms POST to the MaList Cloudflare Worker (worker/worker.js), which holds the GitHub key
+// and opens the issue for the visitor, so nobody needs a GitHub account. A Turnstile check
+// in the send dialog keeps bots out. Places, events and prices still wait for "/approve".
+const SUBMIT_URL = 'https://malist.ameenseytu.workers.dev';
+const TURNSTILE_SITE_KEY = '0x4AAAAAAFjoYutFUll7t1C0';
+const NAME_KEY = 'malist-contributor-name';
+let pendingSend = null; // { type, data, label, onDone }
+let turnstileWidgetId = null;
+
+// Opens the send dialog: optional display name, the anti-spam check, then Send.
+function sendSubmission(type, data, label, onDone) {
+  pendingSend = { type, data, label: label.slice(0, 80), onDone };
+  let saved = '';
+  try { saved = localStorage.getItem(NAME_KEY) || ''; } catch {}
+  document.getElementById('sendName').value = saved;
+  document.getElementById('sendError').classList.add('hidden');
+  document.getElementById('sendBtn').disabled = false;
+  document.getElementById('sendBtn').textContent = 'Send';
+  document.getElementById('sendIntro').textContent = type === 'issue'
+    ? 'Your report is posted publicly so others can see it.'
+    : 'It will be reviewed, then published on MaList.';
+  document.getElementById('sendModal').classList.remove('hidden');
+  if (window.turnstile) {
+    if (turnstileWidgetId === null) {
+      turnstileWidgetId = turnstile.render('#turnstileBox', { sitekey: TURNSTILE_SITE_KEY, theme: document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light' });
+    } else {
+      turnstile.reset(turnstileWidgetId);
+    }
+  }
+}
+
+function closeSendModal() {
+  document.getElementById('sendModal').classList.add('hidden');
+  pendingSend = null;
+}
+
+async function confirmSend() {
+  if (!pendingSend) return;
+  const btn = document.getElementById('sendBtn');
+  const err = document.getElementById('sendError');
+  const showErr = msg => { err.textContent = msg; err.classList.remove('hidden'); };
+  const token = window.turnstile && turnstileWidgetId !== null ? turnstile.getResponse(turnstileWidgetId) : '';
+  if (!token) { showErr(window.turnstile ? 'Please complete the check above first.' : 'The anti-spam check could not load. Check your connection and try again.'); return; }
+  const name = document.getElementById('sendName').value.trim().slice(0, 40);
+  try { localStorage.setItem(NAME_KEY, name); } catch {}
+
+  btn.disabled = true; btn.textContent = 'Sending…'; err.classList.add('hidden');
+  try {
+    const res = await fetch(SUBMIT_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type: pendingSend.type, data: pendingSend.data, label: pendingSend.label, name, turnstileToken: token })
+    });
+    const out = await res.json().catch(() => ({}));
+    if (!res.ok || !out.ok) throw new Error(out.error || 'Could not send right now. Please try again.');
+    const done = pendingSend.onDone;
+    closeSendModal();
+    if (done) done(out);
+  } catch (e) {
+    showErr(e.message || 'Could not send right now. Please try again.');
+    btn.disabled = false; btn.textContent = 'Send';
+    if (window.turnstile) turnstile.reset(turnstileWidgetId);
+  }
 }
 
 // ---------- Boot ----------
@@ -824,7 +880,7 @@ function updatePersonaUI() {
 
 // Civic issue reports. Sample reports (data/builtin.json) are shown labelled as examples;
 // reports made on this device are kept in localStorage so they survive a reload, and each
-// one is also opened as a public GitHub issue — that is where other people actually see it.
+// one is also sent (via the Worker) as a public GitHub issue — that is where other people see it.
 let issuesData = [];
 const MY_ISSUES_KEY = 'malist-my-issues';
 const LIKED_KEY = 'malist-liked-issues';
@@ -867,18 +923,17 @@ function submitIssueReport() {
     zone: currentZone === 'all' ? 'male' : currentZone,
     addedBy: 'You', ts: Date.now()
   };
-  // Must run straight from the click (no await before it) or the new tab is blocked as a popup.
   const label = ISSUE_CATEGORY_LABELS[report.category] || 'Issue';
-  const body = `**${label}** — ${zoneShort[report.zone]}\n\n${comment}\n\n📍 ${report.location}\n\n_Reported via MaList_`;
-  window.open(`https://github.com/${REPO}/issues/new?labels=city-issue`
-    + `&title=${encodeURIComponent(`[Issue] ${label}: ${report.location}`.slice(0, 120))}`
-    + `&body=${encodeURIComponent(body)}`, '_blank', 'noopener,noreferrer');
-  writeStore(MY_ISSUES_KEY, [report, ...readStore(MY_ISSUES_KEY, [])].slice(0, 50));
-  commentEl.value = '';
-  locationEl.value = '';
-  updateIssueLocationHelper();
-  renderIssuesList();
-  showToast('Finish on GitHub to post it publicly');
+  sendSubmission('issue', {
+    category: label, zone: zoneShort[report.zone], comment, location: report.location
+  }, `${label}: ${report.location}`, () => {
+    writeStore(MY_ISSUES_KEY, [report, ...readStore(MY_ISSUES_KEY, [])].slice(0, 50));
+    commentEl.value = '';
+    locationEl.value = '';
+    updateIssueLocationHelper();
+    renderIssuesList();
+    showToast('Issue reported publicly — thank you');
+  });
 }
 
 // One like per report per device (tap again to undo), remembered across reloads. Likes are
@@ -1331,18 +1386,19 @@ function submitPlace() {
   const name = document.getElementById('placeName').value.trim();
   const address = document.getElementById('placeAddress').value.trim();
   if (!name || !address) { showToast('Add a name and address first'); return; }
-  openSubmission('place', {
+  sendSubmission('place', {
     name, address,
     category: document.getElementById('placeCategory').value,
     zone: document.getElementById('placeZone').value,
     freeFloorDelivery: document.getElementById('placeFloor').checked,
     acceptsViber: document.getElementById('placeViber').checked
-  }, name);
-  ['placeName', 'placeAddress'].forEach(id => document.getElementById(id).value = '');
-  document.getElementById('placeFloor').checked = false;
-  document.getElementById('placeViber').checked = false;
-  toggleModal('addPlaceModal');
-  showToast('Finish on GitHub — it goes live once approved');
+  }, name, () => {
+    ['placeName', 'placeAddress'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('placeFloor').checked = false;
+    document.getElementById('placeViber').checked = false;
+    toggleModal('addPlaceModal');
+    showToast('Sent — it goes live once approved');
+  });
 }
 
 // ---------- Add Event ----------
@@ -1356,17 +1412,18 @@ function submitEvent() {
   const location = document.getElementById('eventLocation').value.trim();
   const time = document.getElementById('eventTime').value.trim();
   if (!title || !location || !time) { showToast('Fill in title, location & time'); return; }
-  openSubmission('event', {
+  sendSubmission('event', {
     title, location, time,
     description: document.getElementById('eventDesc').value.trim(),
     hostedBy: document.getElementById('eventHostedBy').value.trim(),
     zone: document.getElementById('eventZone').value,
     startDate: document.getElementById('eventStartDate').value || isoDate(todayDateOnly())
-  }, title);
-  ['eventTitle', 'eventDesc', 'eventLocation', 'eventTime', 'eventHostedBy'].forEach(id => document.getElementById(id).value = '');
-  document.getElementById('eventStartDate').value = '';
-  toggleModal('addEventModal');
-  showToast('Finish on GitHub — it goes live once approved');
+  }, title, () => {
+    ['eventTitle', 'eventDesc', 'eventLocation', 'eventTime', 'eventHostedBy'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('eventStartDate').value = '';
+    toggleModal('addEventModal');
+    showToast('Sent — it goes live once approved');
+  });
 }
 
 // ---------- Submit a price (from a receipt) ----------
@@ -1376,8 +1433,9 @@ function submitPrice() {
   const shop = document.getElementById('scanItemShop').value.trim();
   const zone = document.getElementById('scanItemZone').value;
   if (!name || !shop || isNaN(price) || price <= 0) { showToast('Fill in item, price & shop'); return; }
-  openSubmission('price', { name, price, shop, zone }, `${name} — MVR ${price.toFixed(2)}`);
-  ['scanItemName', 'scanItemPrice', 'scanItemShop'].forEach(id => document.getElementById(id).value = '');
-  toggleModal('scannerModal');
-  showToast('Finish on GitHub — it goes live once approved');
+  sendSubmission('price', { name, price, shop, zone }, `${name} — MVR ${price.toFixed(2)}`, () => {
+    ['scanItemName', 'scanItemPrice', 'scanItemShop'].forEach(id => document.getElementById(id).value = '');
+    toggleModal('scannerModal');
+    showToast('Sent — it goes live once approved');
+  });
 }

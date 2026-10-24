@@ -193,7 +193,7 @@
       <svg class="w-4 h-4 accent shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3" /><path d="M12 9v4" /><path d="M12 17h.01" /></svg>
       <div class="min-w-0 flex-1">
         <span class="font-semibold ink">Spot a pothole, dead streetlight, or trash pile?</span>
-        <span class="ink-soft"> Report it — it's posted publicly on GitHub so others can see it and back it up.</span>
+        <span class="ink-soft"> Report it — it's posted publicly so others can see it and back it up.</span>
       </div>
       <svg class="w-4 h-4 accent shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6" /></svg>
     </section>
@@ -486,7 +486,7 @@
             <p id="scanStatusText" class="text-xs font-semibold accent animate-pulse">Extracting prices…</p>
           </div>
         </div>
-        <p class="text-[10.5px] muted">Opens a pre-filled submission on GitHub (free account needed). It is public and reviewed before it goes live. Receipt-photo scanning is coming later.</p>
+        <p class="text-[10.5px] muted">No account needed. Submissions are public and reviewed before they go live. Receipt-photo scanning is coming later.</p>
       </div>
     </div>
   </div>
@@ -526,7 +526,7 @@
           </label>
         </div>
         <button onclick="submitPlace()" class="w-full btn-primary font-semibold py-2.5 rounded-lg transition">Submit for review</button>
-        <p class="text-[10.5px] muted">Opens a pre-filled submission on GitHub (free account needed). It is public and reviewed before it goes live.</p>
+        <p class="text-[10.5px] muted">No account needed. Submissions are public and reviewed before they go live.</p>
       </div>
     </div>
   </div>
@@ -561,7 +561,7 @@
           <input id="eventStartDate" type="date" class="w-full rounded-lg px-3 py-2.5">
         </div>
         <button onclick="submitEvent()" class="w-full btn-primary font-semibold py-2.5 rounded-lg transition">Submit for review</button>
-        <p class="text-[10.5px] muted">Opens a pre-filled submission on GitHub (free account needed). It is public and reviewed before it goes live.</p>
+        <p class="text-[10.5px] muted">No account needed. Submissions are public and reviewed before they go live.</p>
       </div>
     </div>
   </div>
@@ -702,7 +702,7 @@
   <!-- REPORT ISSUE MODAL: category, comment, location text field (with a Google Maps
        directions link built from whatever's typed), submit, and a feed of previously
        reported issues (labelled samples plus your own reports on this device). Submitting
-       opens a public GitHub issue — that is where other people see the report. -->
+       posts it as a public GitHub issue through the MaList Worker — no account needed. -->
   <div id="reportIssueModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop">
     <div class="card w-full max-w-lg max-h-[85vh] overflow-hidden flex flex-col">
       <div class="p-5 border-b hairline flex items-start justify-between gap-3 shrink-0">
@@ -740,8 +740,8 @@
           <p id="issueLocationHelper" class="text-[10.5px] muted mt-1">Add details of nearby place from Google Maps</p>
           <button onclick="openIssueDirections()" class="text-xs font-semibold link-accent mt-1.5 inline-flex items-center gap-1">Get directions →</button>
         </div>
-        <button onclick="submitIssueReport()" class="btn-primary text-xs font-semibold px-4 py-2.5 rounded-lg transition w-full">Submit report on GitHub</button>
-        <p class="text-[10.5px] muted -mt-2">Opens a public GitHub issue (free account needed). A copy is also kept on this device.</p>
+        <button onclick="submitIssueReport()" class="btn-primary text-xs font-semibold px-4 py-2.5 rounded-lg transition w-full">Submit report</button>
+        <p class="text-[10.5px] muted -mt-2">Posted publicly on the MaList GitHub page, no account needed. A copy is also kept on this device.</p>
 
         <div class="border-t hairline pt-4">
           <p class="eyebrow mb-2">Your reports &amp; examples</p>
@@ -959,6 +959,29 @@
     <span id="toastText">Saved</span>
   </div>
 
+  <!-- SEND DIALOG: shared by every submission form. Optional display name, the Cloudflare
+       Turnstile anti-spam check, then Send — posts to the MaList Worker (see js/app.js). -->
+  <div id="sendModal" class="hidden fixed inset-0 z-[60] flex items-center justify-center p-4 modal-backdrop">
+    <div class="card w-full max-w-sm p-5 space-y-4 text-xs">
+      <div>
+        <p class="eyebrow accent">Almost done</p>
+        <h3 class="serif font-semibold text-lg leading-tight mt-1">Send your submission</h3>
+        <p id="sendIntro" class="muted mt-1"></p>
+      </div>
+      <div>
+        <p class="eyebrow mb-1.5">Your name (optional)</p>
+        <input id="sendName" type="text" maxlength="40" placeholder="Shown as the contributor" class="w-full rounded-lg px-3 py-2.5 text-sm">
+      </div>
+      <div id="turnstileBox"></div>
+      <p id="sendError" class="hidden font-medium" style="color:var(--accent)"></p>
+      <div class="flex gap-2">
+        <button onclick="closeSendModal()" class="flex-1 px-4 py-2.5 rounded-lg hairline border font-semibold">Cancel</button>
+        <button id="sendBtn" onclick="confirmSend()" class="btn-primary flex-1 px-4 py-2.5 rounded-lg font-semibold transition">Send</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
   <script src="js/app.js"></script>
 </body>
 </html>
