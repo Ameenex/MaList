@@ -1,0 +1,964 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light" class="h-full">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MaList | Greater Malé City Portal</title>
+<script>
+  // Set the theme before first paint to avoid a light flash (logic mirrored in js/app.js).
+  try { document.documentElement.setAttribute('data-theme', localStorage.getItem('malist-theme') || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')); } catch (e) {}
+</script>
+
+<!-- PWA: manifest + install/home-screen metadata -->
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#BF5B3D">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="MaList">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" href="icons/favicon.png" type="image/png">
+<link rel="stylesheet" href="css/tailwind.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=Source+Code+Pro:wght@500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body class="min-h-full antialiased pb-24 md:pb-10">
+
+  <!-- HEADER -->
+  <header class="sticky top-0 z-30 surface hairline border-b backdrop-blur-sm" style="background:color-mix(in srgb, var(--surface) 92%, transparent);">
+    <div class="max-w-md md:max-w-3xl lg:max-w-5xl xl:max-w-6xl mx-auto px-5 lg:px-8 py-4 lg:py-5">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-3 cursor-pointer" onclick="handleLogoClick()">
+          <div class="w-10 h-10 lg:w-12 lg:h-12 rounded-lg overflow-hidden relative shrink-0">
+            <svg class="absolute inset-0 w-full h-full logo-svg logo-svg-light" viewBox="0 0 400 400" role="img" aria-label="MaList logo">
+              <defs><clipPath id="logoSquircleL1"><rect x="0" y="0" width="400" height="400" rx="88" ry="88"/></clipPath></defs>
+              <g clip-path="url(#logoSquircleL1)">
+                <rect x="0" y="0" width="400" height="400" fill="#FFFFFF"/>
+                <rect x="0" y="0" width="400" height="400" fill="none" stroke="#B8A87E" stroke-width="8"/>
+                <text x="52" y="108" font-family="Georgia,'Times New Roman',serif" font-weight="700" font-size="72" fill="#22201B">Ma</text>
+                <circle cx="88" cy="196" r="34" fill="#BF5B3D" opacity="0.16"/><circle cx="88" cy="196" r="22" fill="#BF5B3D"/><rect x="146" y="188" width="200" height="14" rx="7" fill="#E4DECC"/>
+                <circle cx="88" cy="266" r="34" fill="#8B3A3A" opacity="0.16"/><circle cx="88" cy="266" r="22" fill="#8B3A3A"/><rect x="146" y="258" width="200" height="14" rx="7" fill="#E4DECC"/>
+                <circle cx="88" cy="336" r="34" fill="#D9A441" opacity="0.16"/><circle cx="88" cy="336" r="22" fill="#D9A441"/><rect x="146" y="328" width="200" height="14" rx="7" fill="#E4DECC"/>
+              </g>
+            </svg>
+            <svg class="absolute inset-0 w-full h-full logo-svg logo-svg-dark" viewBox="0 0 400 400" role="img" aria-label="MaList logo">
+              <defs><clipPath id="logoSquircleD1"><rect x="0" y="0" width="400" height="400" rx="88" ry="88"/></clipPath></defs>
+              <g clip-path="url(#logoSquircleD1)">
+                <rect x="0" y="0" width="400" height="400" fill="#211E17"/>
+                <rect x="0" y="0" width="400" height="400" fill="none" stroke="#6B5D3A" stroke-width="8"/>
+                <text x="52" y="108" font-family="Georgia,'Times New Roman',serif" font-weight="700" font-size="72" fill="#F3EEE1">Ma</text>
+                <circle cx="88" cy="196" r="34" fill="#E08F6C" opacity="0.22"/><circle cx="88" cy="196" r="22" fill="#E08F6C"/><rect x="146" y="188" width="200" height="14" rx="7" fill="#3A3324"/>
+                <circle cx="88" cy="266" r="34" fill="#C97B6B" opacity="0.22"/><circle cx="88" cy="266" r="22" fill="#C97B6B"/><rect x="146" y="258" width="200" height="14" rx="7" fill="#3A3324"/>
+                <circle cx="88" cy="336" r="34" fill="#E8B569" opacity="0.22"/><circle cx="88" cy="336" r="22" fill="#E8B569"/><rect x="146" y="328" width="200" height="14" rx="7" fill="#3A3324"/>
+              </g>
+            </svg>
+          </div>
+          <div>
+            <h1 class="serif text-xl lg:text-2xl font-semibold tracking-tight leading-none">MaList</h1>
+            <p class="eyebrow mt-1">Greater Malé City Portal</p>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-3">
+          <button onclick="toggleModal('weatherModal')" class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full hairline border ink-soft hover:accent transition" title="Weather" aria-label="Weather">
+            <div class="w-4 h-4 shrink-0 accent" id="weatherChipIcon"></div>
+            <span class="mono text-xs font-semibold"><span id="weatherChipTemp">--</span>°</span>
+          </button>
+          <button onclick="toggleModal('leaderboardModal')" class="p-2 rounded-full hairline border ink-soft hover:accent transition" title="Contributors" aria-label="Leaderboard">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 14.66v1.626a2 2 0 0 1-.976 1.696A5 5 0 0 0 7 21.978" />
+  <path d="M14 14.66v1.626a2 2 0 0 0 .976 1.696A5 5 0 0 1 17 21.978" />
+  <path d="M18 9h1.5a1 1 0 0 0 0-5H18" />
+  <path d="M4 22h16" />
+  <path d="M6 9a6 6 0 0 0 12 0V3a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1z" />
+  <path d="M6 9H4.5a1 1 0 0 1 0-5H6" /></svg>
+          </button>
+          <button onclick="toggleModal('emergencyModal')" class="p-2 rounded-full hairline border ink-soft hover:accent transition relative" title="Emergency numbers" aria-label="Emergency numbers" style="color:var(--accent); border-color:var(--accent);">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13.832 16.568a1 1 0 0 0 1.213-.303l.355-.465A2 2 0 0 1 17 15h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2A18 18 0 0 1 2 4a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v3a2 2 0 0 1-.8 1.6l-.468.351a1 1 0 0 0-.292 1.233 14 14 0 0 0 6.392 6.384" /></svg>
+            <svg class="w-2.5 h-2.5 absolute top-0.5 right-0.5" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M12 2 1 21h22z" /></svg>
+          </button>
+          <button onclick="toggleTheme()" class="theme-switch" aria-label="Toggle light and dark mode" title="Toggle theme">
+            <span class="theme-knob"><svg class="theme-icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4" />
+  <path d="M12 2v2" />
+  <path d="M12 20v2" />
+  <path d="m4.93 4.93 1.41 1.41" />
+  <path d="m17.66 17.66 1.41 1.41" />
+  <path d="M2 12h2" />
+  <path d="M20 12h2" />
+  <path d="m6.34 17.66-1.41 1.41" />
+  <path d="m19.07 4.93-1.41 1.41" /></svg><svg class="theme-icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401" /></svg></span>
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- MAIN -->
+  <main class="max-w-md md:max-w-3xl lg:max-w-5xl xl:max-w-6xl mx-auto w-full px-5 lg:px-8 py-6 lg:py-8 pb-24 space-y-7 lg:space-y-9">
+
+    <!-- PERSONA TOGGLE: a persistent, always-available switch (not a one-time onboarding
+         detour) that reconfigures which contextual banner shows below — Tourist Guide
+         for visitors, Report an Issue for residents. Either is still reachable regardless
+         of the active persona; this only changes which one is surfaced by default. -->
+    <div class="flex p-1 rounded-xl hairline border surface-2 gap-1 max-w-2xl lg:max-w-3xl mx-auto text-xs" id="personaToggle">
+      <button onclick="setPersona('resident')" data-persona="resident" class="persona-btn active flex-1 py-2 rounded-lg text-center font-semibold transition">Local Resident</button>
+      <button onclick="setPersona('visitor')" data-persona="visitor" class="persona-btn flex-1 py-2 rounded-lg text-center font-semibold transition">Visitor / Tourist</button>
+    </div>
+
+    <!-- TOURIST ONBOARDING BANNER: dismissible via top-left X; opens the full guide page.
+         Shown by default in Visitor mode, hidden in Resident mode (persona-driven, not a
+         one-time-only dismissal — switching personas brings it back). -->
+    <section id="touristBanner" class="hidden card p-4 pl-6 flex items-start gap-3 relative">
+      <button onclick="dismissTouristBanner()" class="absolute -top-2 -left-2 w-6 h-6 rounded-full flex items-center justify-center shadow-lg" style="background:var(--surface); border:1px solid var(--border); color:var(--muted);" aria-label="Dismiss" title="Dismiss">
+        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18" />
+  <path d="m6 6 12 12" /></svg>
+      </button>
+      <div class="w-10 h-10 rounded-full flex items-center justify-center shrink-0" style="background:var(--accent-soft);">
+        <svg class="w-5 h-5 accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 2 3 1 1 3 2-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z" /></svg>
+      </div>
+      <div class="min-w-0 flex-1">
+        <p class="serif font-semibold text-[15px] leading-tight">Welcome to Malé! New here?</p>
+        <p class="text-xs muted mt-0.5 leading-snug">Get a quick guide to visas, getting into the city, money, and local customs.</p>
+        <button onclick="openTouristGuide()" class="btn-primary text-xs font-semibold px-4 py-2 rounded-lg transition mt-2.5">Get guidance →</button>
+      </div>
+    </section>
+
+    <!-- TOURIST QUICK TOOLS: the things a visitor is most likely to need right away,
+         one tap each, without going through the full guide page first. Shown/hidden in
+         lockstep with the guide banner above (same persona-driven visibility). -->
+    <div id="touristQuickTools" class="hidden grid grid-cols-3 gap-2.5 max-w-2xl lg:max-w-3xl mx-auto">
+      <button onclick="openSimPackages()" class="card p-3 flex flex-col items-center gap-1.5 text-center cursor-pointer">
+        <svg class="w-5 h-5 accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="16" height="20" x="4" y="2" rx="2" /><path d="M12 18h.01" /></svg>
+        <span class="text-[10.5px] font-semibold leading-tight">SIM packages</span>
+      </button>
+      <button onclick="toggleModal('atmLocatorModal')" class="card p-3 flex flex-col items-center gap-1.5 text-center cursor-pointer">
+        <svg class="w-5 h-5 accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="5" rx="2" /><line x1="2" x2="22" y1="10" y2="10" /></svg>
+        <span class="text-[10.5px] font-semibold leading-tight">Locate ATMs</span>
+      </button>
+      <button onclick="toggleModal('emergencyModal')" class="card p-3 flex flex-col items-center gap-1.5 text-center cursor-pointer">
+        <svg class="w-5 h-5 accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13.832 16.568a1 1 0 0 0 1.213-.303l.355-.465A2 2 0 0 1 17 15h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2A18 18 0 0 1 2 4a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v3a2 2 0 0 1-.8 1.6l-.468.351a1 1 0 0 0-.292 1.233 14 14 0 0 0 6.392 6.384" /></svg>
+        <span class="text-[10.5px] font-semibold leading-tight">Emergency</span>
+      </button>
+    </div>
+
+    <!-- PLACES TO VISIT: a top-level section (not tab-gated), hidden by default and
+         revealed specifically when the tourist guide banner is dismissed. Lives outside
+         the tab sections deliberately — Visitor mode defaults to the Events tab, so
+         anything placed inside the City Feed tab's markup would stay invisible even
+         after being "revealed" unless that specific tab happened to be active. -->
+    <div id="placesToVisitCard" class="hidden space-y-3">
+      <div>
+        <h3 class="eyebrow">Places to visit</h3>
+        <p class="text-xs muted mt-0.5">Tap any spot for a local's take — what to actually do there, not just what it is.</p>
+      </div>
+      <div class="space-y-2.5">
+        <button onclick="openPlaceRecommendation('friday_mosque')" class="card p-3.5 flex items-center gap-3 w-full text-left cursor-pointer">
+          <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style="background:var(--accent-soft);">
+            <svg class="w-5 h-5 accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 22h20" /><path d="M6 18v4" /><path d="M18 18v4" /><path d="M6 14h12" /><path d="M6 6h12" /><path d="M4 10h16" /><path d="M12 2 4 6h16z" /></svg>
+          </div>
+          <div class="min-w-0 flex-1">
+            <p class="font-semibold text-sm">Old Friday Mosque (Hukuru Miskiy)</p>
+            <p class="text-[11px] muted mt-0.5">17th-century coral-stone mosque, one of Malé's oldest landmarks</p>
+          </div>
+          <svg class="w-4 h-4 muted shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6" /></svg>
+        </button>
+        <button onclick="openPlaceRecommendation('sultan_park')" class="card p-3.5 flex items-center gap-3 w-full text-left cursor-pointer">
+          <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style="background:var(--accent-soft);">
+            <svg class="w-5 h-5 accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 22h20" /><path d="M6 18v4" /><path d="M18 18v4" /><path d="M6 14h12" /><path d="M6 6h12" /><path d="M4 10h16" /><path d="M12 2 4 6h16z" /></svg>
+          </div>
+          <div class="min-w-0 flex-1">
+            <p class="font-semibold text-sm">Sultan Park &amp; National Museum</p>
+            <p class="text-[11px] muted mt-0.5">Former royal palace grounds, now a public park and museum</p>
+          </div>
+          <svg class="w-4 h-4 muted shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6" /></svg>
+        </button>
+        <button onclick="openPlaceRecommendation('rasfannu')" class="card p-3.5 flex items-center gap-3 w-full text-left cursor-pointer">
+          <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style="background:var(--accent-soft);">
+            <svg class="w-5 h-5 accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 22h20" /><path d="M6 18v4" /><path d="M18 18v4" /><path d="M6 14h12" /><path d="M6 6h12" /><path d="M4 10h16" /><path d="M12 2 4 6h16z" /></svg>
+          </div>
+          <div class="min-w-0 flex-1">
+            <p class="font-semibold text-sm">Rasfannu (Artificial Beach)</p>
+            <p class="text-[11px] muted mt-0.5">Popular swimming spot and evening hangout along Malé's seafront</p>
+          </div>
+          <svg class="w-4 h-4 muted shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6" /></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- REPORT AN ISSUE BANNER: shown by default in Resident mode, hidden in Visitor mode.
+         Same card treatment as the tourist banner so the two feel like genuine peers,
+         not one being an afterthought bolted onto the other. -->
+    <section id="reportIssueBanner" onclick="openReportIssueModal()" class="rounded-xl p-3.5 flex items-center gap-3 text-xs cursor-pointer" style="background:var(--accent-soft); border:1px solid var(--border);">
+      <svg class="w-4 h-4 accent shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3" /><path d="M12 9v4" /><path d="M12 17h.01" /></svg>
+      <div class="min-w-0 flex-1">
+        <span class="font-semibold ink">Spot a pothole, dead streetlight, or trash pile?</span>
+        <span class="ink-soft"> Report it — it's posted publicly on GitHub so others can see it and back it up.</span>
+      </div>
+      <svg class="w-4 h-4 accent shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6" /></svg>
+    </section>
+
+    <!-- TOP WIDGETS: current event + prayer countdown, sharing the row evenly -->
+    <section id="topWidgetsRow" class="top-widgets">
+
+      <!-- CURRENT / NEXT EVENT WIDGET -->
+      <div id="eventWidget" class="top-widget is-hidden" onclick="openEventFromWidget()">
+        <div class="card w-full h-full px-4 py-3 flex items-center gap-3 cursor-pointer">
+          <div class="w-9 h-9 rounded-full flex items-center justify-center shrink-0 relative" style="background:var(--surface-2);">
+            <svg class="w-4 h-4 accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 14v2.2l1.6 1" />
+  <path d="M16 2v4" />
+  <path d="M21 7.5V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3.5" />
+  <path d="M3 10h5" />
+  <path d="M8 2v4" />
+  <circle cx="16" cy="16" r="6" /></svg>
+            <span id="eventLiveDot" class="hidden absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full" style="background:var(--good); box-shadow:0 0 0 2px var(--surface);"></span>
+          </div>
+          <div class="min-w-0 flex-1">
+            <p class="eyebrow leading-none"><span id="eventStatusLabel">Next event</span></p>
+            <p class="serif font-semibold text-[15px] leading-tight mt-1 truncate"><span id="eventNextTitle"></span></p>
+            <p id="eventCountdown" class="mono text-[13px] font-semibold accent mt-1 tracking-tight"></p>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- SEARCH -->
+    <section class="space-y-4">
+      <div class="relative max-w-2xl lg:max-w-3xl mx-auto">
+        <svg class="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21 21-4.34-4.34" />
+  <circle cx="11" cy="11" r="8" /></svg>
+        <input type="text" id="searchInput" oninput="handleSearch()" placeholder="Search clinics, shops, buses, events, or items…"
+          class="w-full text-sm rounded-xl pl-11 pr-10 py-3.5 transition">
+        <button id="clearSearchBtn" onclick="clearSearch()" class="hidden absolute right-3.5 top-1/2 -translate-y-1/2 muted hover:accent">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18" />
+  <path d="m6 6 12 12" /></svg>
+        </button>
+      </div>
+
+      <!-- Zone filter chips: lightweight, tied to search/browse results, rather than a
+           dominant top-level segmented control. Same visual language as the category
+           chips used elsewhere (Places directory, etc). -->
+      <div class="flex flex-wrap gap-2 max-w-2xl lg:max-w-3xl mx-auto">
+        <button onclick="setZone('all')" data-zone="all" class="zone-chip active py-1.5 px-3.5 rounded-lg whitespace-nowrap">All</button>
+        <button onclick="setZone('male')" data-zone="male" class="zone-chip py-1.5 px-3.5 rounded-lg whitespace-nowrap">Malé</button>
+        <button onclick="setZone('phase1')" data-zone="phase1" class="zone-chip py-1.5 px-3.5 rounded-lg whitespace-nowrap">Hulhumalé Phase 1</button>
+        <button onclick="setZone('phase2')" data-zone="phase2" class="zone-chip py-1.5 px-3.5 rounded-lg whitespace-nowrap">Hulhumalé Phase 2</button>
+      </div>
+
+      <div class="grid grid-cols-5 gap-2 lg:gap-3 max-w-2xl lg:max-w-3xl mx-auto">
+        <button onclick="switchTab('feed')" data-tabbtn="feed" class="tab-gateway active rounded-xl text-center flex flex-col items-center justify-center gap-1.5 py-3 transition">
+          <svg class="w-4 h-4 accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18h-5" />
+  <path d="M18 14h-8" />
+  <path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-4 0v-9a2 2 0 0 1 2-2h2" />
+  <rect width="8" height="4" x="10" y="6" rx="1" /></svg>
+          <span class="text-[10px] sm:text-xs font-semibold">City Feed</span>
+        </button>
+        <button onclick="switchTab('directory')" data-tabbtn="directory" class="tab-gateway rounded-xl text-center flex flex-col items-center justify-center gap-1.5 py-3 transition">
+          <svg class="w-4 h-4 accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0" />
+  <circle cx="12" cy="10" r="3" /></svg>
+          <span class="text-[10px] sm:text-xs font-semibold">Places</span>
+        </button>
+        <button onclick="switchTab('events')" data-tabbtn="events" class="tab-gateway rounded-xl text-center flex flex-col items-center justify-center gap-1.5 py-3 transition">
+          <svg class="w-4 h-4 accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v4" />
+  <path d="M16 2v4" />
+  <rect width="18" height="18" x="3" y="4" rx="2" />
+  <path d="M3 10h18" /></svg>
+          <span class="text-[10px] sm:text-xs font-semibold">Events</span>
+        </button>
+        <button onclick="switchTab('priceWiki')" data-tabbtn="priceWiki" class="tab-gateway rounded-xl text-center flex flex-col items-center justify-center gap-1.5 py-3 transition">
+          <svg class="w-4 h-4 accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 17V7" />
+  <path d="M16 8h-6a2 2 0 0 0 0 4h4a2 2 0 0 1 0 4H8" />
+  <path d="M4 3a1 1 0 0 1 1-1 1.3 1.3 0 0 1 .7.2l.933.6a1.3 1.3 0 0 0 1.4 0l.934-.6a1.3 1.3 0 0 1 1.4 0l.933.6a1.3 1.3 0 0 0 1.4 0l.933-.6a1.3 1.3 0 0 1 1.4 0l.934.6a1.3 1.3 0 0 0 1.4 0l.933-.6A1.3 1.3 0 0 1 19 2a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1 1.3 1.3 0 0 1-.7-.2l-.933-.6a1.3 1.3 0 0 0-1.4 0l-.934.6a1.3 1.3 0 0 1-1.4 0l-.933-.6a1.3 1.3 0 0 0-1.4 0l-.933.6a1.3 1.3 0 0 1-1.4 0l-.934-.6a1.3 1.3 0 0 0-1.4 0l-.933.6a1.3 1.3 0 0 1-.7.2 1 1 0 0 1-1-1z" /></svg>
+          <span class="text-[10px] sm:text-xs font-semibold">Price Wiki</span>
+        </button>
+
+        <!-- PRAYER TIMES CHIP: Malé & Hulhumalé share essentially the same times, so
+             this is one shared live chip rather than a per-zone widget. Styled and sized
+             identically to the four tabs beside it — same grid cell, same tab-gateway
+             look — with a small live dot for the "confirmed live" state. Tap opens the
+             full 6-time breakdown (5 prayers + sunrise). -->
+        <button onclick="toggleModal('prayerDetailModal')" data-tabbtn="prayer" class="tab-gateway rounded-xl text-center flex flex-col items-center justify-center gap-1.5 py-3 transition relative" title="Prayer times">
+          <span id="prayerChipLiveDot" class="hidden absolute top-2 right-2 w-1.5 h-1.5 rounded-full" style="background:var(--good);"></span>
+          <svg class="w-4 h-4 accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 5h4" />
+  <path d="M20 3v4" />
+  <path d="M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401" /></svg>
+          <span class="text-[10px] sm:text-xs font-semibold leading-tight truncate w-full px-0.5"><span id="prayerChipName"></span> <span id="prayerChipTime" class="mono"></span></span>
+          <span id="prayerChipCountdown" class="mono text-[9px] accent font-semibold leading-none"></span>
+        </button>
+      </div>
+    </section>
+
+    <!-- FEED -->
+    <section id="section-feed" class="space-y-6">
+      <div class="card p-5 space-y-4">
+        <div class="flex items-center justify-between text-xs border-b hairline pb-3">
+          <span class="flex items-center gap-2 font-semibold accent"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11" /></svg> Greater Malé Transit</span>
+          <span class="eyebrow">Fixed schedule</span>
+        </div>
+        <div id="transitGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs"></div>
+        <div id="transitActions" class="flex gap-2 pt-1"></div>
+        <p class="text-[10px] muted pt-0.5">Based on RTL's published daily timetable. Arrival windows are estimated from scheduled travel time and a delay buffer, not live vehicle tracking — always confirm against RTL for real-time changes. If a bus doesn't arrive within its expected window, check MTCC RTL's announcements on X (<a href="https://x.com/MTCCPlc" target="_blank" rel="noopener noreferrer" class="link-accent">@MTCCPlc ↗</a>) for service disruptions.</p>
+      </div>
+
+      <!-- Advisories come from data/advisories.json and hide themselves after their expiry date. -->
+      <div id="advisoriesContainer" class="space-y-2.5"></div>
+
+      <div class="space-y-3">
+        <div class="flex justify-between items-baseline">
+          <h3 class="eyebrow">Happening today</h3>
+          <button onclick="switchTab('events')" class="text-xs link-accent font-semibold">View all →</button>
+        </div>
+        <div id="feedEventsContainer" class="space-y-2.5"></div>
+      </div>
+
+      <div class="space-y-3">
+        <div class="flex justify-between items-baseline">
+          <h3 class="eyebrow">Essential city places</h3>
+          <button onclick="switchTab('directory')" class="text-xs link-accent font-semibold">Browse all →</button>
+        </div>
+        <div id="feedShopsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5 lg:gap-3"></div>
+      </div>
+    </section>
+
+    <!-- DIRECTORY -->
+    <section id="section-directory" class="hidden space-y-5">
+      <div class="flex items-center justify-between border-b hairline pb-3">
+        <div>
+          <h3 class="serif text-lg lg:text-xl font-semibold flex items-center gap-2"><svg class="w-4 h-4 accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0" />
+  <circle cx="12" cy="10" r="3" /></svg> Greater Malé Directory</h3>
+          <p class="text-[11.5px] muted mt-0.5">Shops, clinics, workshops &amp; services</p>
+        </div>
+        <button onclick="openAddPlace()" class="text-xs font-semibold link-accent flex items-center gap-1">+ Add place</button>
+      </div>
+
+      <div class="surface-2 p-3.5 rounded-xl hairline border space-y-2.5">
+        <p class="eyebrow flex items-center gap-1.5"><svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 5H3" />
+  <path d="M12 19H3" />
+  <path d="M14 3v4" />
+  <path d="M16 17v4" />
+  <path d="M21 12h-9" />
+  <path d="M21 19h-5" />
+  <path d="M21 5h-7" />
+  <path d="M8 10v4" />
+  <path d="M8 12H3" /></svg> Logistics options</p>
+        <div class="flex flex-wrap gap-2 text-xs">
+          <label class="flex items-center gap-2 surface hairline border px-3 py-2 rounded-lg cursor-pointer">
+            <input type="checkbox" id="filterFloor" onchange="renderShops()" class="rounded">
+            <span class="text-[11.5px] ink-soft">Free doorstep (up to 5th fl.)</span>
+          </label>
+          <label class="flex items-center gap-2 surface hairline border px-3 py-2 rounded-lg cursor-pointer">
+            <input type="checkbox" id="filterViber" onchange="renderShops()" class="rounded">
+            <span class="text-[11.5px] ink-soft">Accepts BML Viber slip</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="flex gap-2 overflow-x-auto no-scrollbar pb-1 text-xs">
+        <button onclick="filterShopCategory('all')" data-cat="all" class="cat-btn active py-1.5 px-3.5 rounded-lg whitespace-nowrap">All places</button>
+        <button onclick="filterShopCategory('clinic')" data-cat="clinic" class="cat-btn py-1.5 px-3.5 rounded-lg whitespace-nowrap">Clinics &amp; pharmacies</button>
+        <button onclick="filterShopCategory('fihaara')" data-cat="fihaara" class="cat-btn py-1.5 px-3.5 rounded-lg whitespace-nowrap">Fihaaras</button>
+        <button onclick="filterShopCategory('services')" data-cat="services" class="cat-btn py-1.5 px-3.5 rounded-lg whitespace-nowrap">Garages &amp; services</button>
+      </div>
+
+      <div id="shopGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 lg:gap-4"></div>
+    </section>
+
+    <!-- EVENTS -->
+    <section id="section-events" class="hidden space-y-5">
+      <div class="flex items-center justify-between border-b hairline pb-3">
+        <div>
+          <h3 class="serif text-lg lg:text-xl font-semibold flex items-center gap-2"><svg class="w-4 h-4 accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v4" />
+  <path d="M16 2v4" />
+  <rect width="18" height="18" x="3" y="4" rx="2" />
+  <path d="M3 10h18" /></svg> City Event Engine</h3>
+          <p class="text-[11.5px] muted mt-0.5">Night markets, tournaments &amp; community meets</p>
+        </div>
+        <button onclick="openAddEvent()" class="text-xs font-semibold link-accent flex items-center gap-1">+ Add event</button>
+      </div>
+
+      <div id="eventTabGroup" class="evt-tab-group flex p-1 surface-2 rounded-lg hairline border text-[11.5px] w-fit gap-1">
+        <div id="eventPill" class="evt-pill"></div>
+        <button onclick="filterEvents('today')" data-evttab="today" class="evt-tab active px-3 py-1.5 rounded-md">Today</button>
+        <button onclick="filterEvents('weekend')" data-evttab="weekend" class="evt-tab px-3 py-1.5 rounded-md">This weekend</button>
+        <button onclick="filterEvents('upcoming')" data-evttab="upcoming" class="evt-tab px-3 py-1.5 rounded-md">Upcoming</button>
+        <button onclick="filterEvents('all')" data-evttab="all" class="evt-tab px-3 py-1.5 rounded-md">All</button>
+      </div>
+
+      <div id="eventsContainer" class="grid grid-cols-1 lg:grid-cols-2 gap-3 lg:gap-4"></div>
+    </section>
+
+    <!-- PRICE WIKI -->
+    <section id="section-priceWiki" class="hidden space-y-5">
+      <div class="flex items-center justify-between border-b hairline pb-3">
+        <div>
+          <h3 class="serif text-lg lg:text-xl font-semibold flex items-center gap-2"><svg class="w-4 h-4 accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 17V7" />
+  <path d="M16 8h-6a2 2 0 0 0 0 4h4a2 2 0 0 1 0 4H8" />
+  <path d="M4 3a1 1 0 0 1 1-1 1.3 1.3 0 0 1 .7.2l.933.6a1.3 1.3 0 0 0 1.4 0l.934-.6a1.3 1.3 0 0 1 1.4 0l.933.6a1.3 1.3 0 0 0 1.4 0l.933-.6a1.3 1.3 0 0 1 1.4 0l.934.6a1.3 1.3 0 0 0 1.4 0l.933-.6A1.3 1.3 0 0 1 19 2a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1 1.3 1.3 0 0 1-.7-.2l-.933-.6a1.3 1.3 0 0 0-1.4 0l-.934.6a1.3 1.3 0 0 1-1.4 0l-.933-.6a1.3 1.3 0 0 0-1.4 0l-.933.6a1.3 1.3 0 0 1-1.4 0l-.934-.6a1.3 1.3 0 0 0-1.4 0l-.933.6a1.3 1.3 0 0 1-.7.2 1 1 0 0 1-1-1z" /></svg> Crowdsourced Price Wiki</h3>
+          <p class="text-[11.5px] muted mt-0.5">Item prices extracted from receipt uploads</p>
+        </div>
+        <button onclick="toggleModal('scannerModal')" class="text-xs font-semibold link-accent flex items-center gap-1">+ Scan bill</button>
+      </div>
+
+      <div id="priceCarousel" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 lg:gap-4"></div>
+    </section>
+
+    <footer class="mt-10 pt-6 border-t hairline text-center space-y-1.5 text-xs muted">
+      <p class="serif ink font-medium text-sm">MaList</p>
+      <p>All-in-one Greater Malé city portal</p>
+      <p class="text-[10.5px]">Malé · Hulhumalé Phase 1 · Hulhumalé Phase 2</p>
+      <p class="text-[10px] pt-1">Community data is reviewed, then published from this site's GitHub repo.</p>
+    </footer>
+  </main>
+
+  <!-- FIXED BOTTOM NAV: thumb-reachable core destinations on mobile, per the research's
+       "fixed bottom nav limited to ~4 destinations" recommendation. Reuses the same
+       switchTab/modal functions the top nav chips already call — this is an additional,
+       easier-to-reach control surface, not a separate parallel state. Hidden on desktop
+       (lg+) where a mouse reaches the top nav just as easily and a bottom bar adds
+       nothing but visual clutter. -->
+  <nav class="mobile-bottom-nav fixed bottom-0 left-0 right-0 z-30 surface hairline border-t backdrop-blur-sm px-2 py-2 items-center justify-around" style="background:color-mix(in srgb, var(--surface) 94%, transparent);">
+    <button onclick="switchTab('feed')" class="flex flex-col items-center gap-0.5 px-3 py-1 ink-soft hover:accent transition">
+      <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><path d="M9 22V12h6v10" /></svg>
+      <span class="text-[10px] font-semibold">Home</span>
+    </button>
+    <button onclick="switchTab('directory')" class="flex flex-col items-center gap-0.5 px-3 py-1 ink-soft hover:accent transition">
+      <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0" /><circle cx="12" cy="10" r="3" /></svg>
+      <span class="text-[10px] font-semibold">Map</span>
+    </button>
+    <button onclick="openReportIssueModal()" class="flex flex-col items-center gap-0.5 px-3 py-1 ink-soft hover:accent transition">
+      <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3" /><path d="M12 9v4" /><path d="M12 17h.01" /></svg>
+      <span class="text-[10px] font-semibold">Report</span>
+    </button>
+    <button onclick="toggleModal('emergencyModal')" class="flex flex-col items-center gap-0.5 px-3 py-1 ink-soft hover:accent transition">
+      <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" /><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" /></svg>
+      <span class="text-[10px] font-semibold">Alerts</span>
+    </button>
+  </nav>
+
+
+  <!-- FAB -->
+  <div class="scan-fab fixed right-5 z-40">
+    <button onclick="toggleModal('scannerModal')" class="flex items-center justify-center w-14 h-14 bg-accent rounded-full shadow-lg active:scale-95 transition-all" title="Scan receipt" style="box-shadow:0 10px 30px -8px color-mix(in srgb, var(--accent) 60%, transparent);">
+      <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13.997 4a2 2 0 0 1 1.76 1.05l.486.9A2 2 0 0 0 18.003 7H20a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h1.997a2 2 0 0 0 1.759-1.048l.489-.904A2 2 0 0 1 10.004 4z" />
+  <circle cx="12" cy="13" r="3" /></svg>
+    </button>
+  </div>
+
+  <!-- SCANNER MODAL -->
+  <div id="scannerModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop">
+    <div class="card w-full max-w-md overflow-hidden flex flex-col">
+      <div class="p-5 border-b hairline flex items-center justify-between">
+        <div class="flex items-center gap-2.5">
+          <svg class="w-4.5 h-4.5 accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2" />
+  <path d="M17 3h2a2 2 0 0 1 2 2v2" />
+  <path d="M21 17v2a2 2 0 0 1-2 2h-2" />
+  <path d="M7 21H5a2 2 0 0 1-2-2v-2" />
+  <path d="M7 12h10" /></svg>
+          <h3 class="serif font-semibold">Receipt Scanner</h3>
+        </div>
+        <div class="flex items-center gap-1"><button onclick="toggleModal('scannerModal')" class="muted hover:accent p-1" title="Close" aria-label="Close"><svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18" />
+  <path d="m6 6 12 12" /></svg></button></div>
+      </div>
+      <div class="p-5 space-y-4">
+        <div class="relative surface-2 rounded-xl border-2 border-dashed hairline h-52 flex flex-col items-center justify-center overflow-hidden">
+          <div id="scannerIdleView" class="text-center p-4 space-y-3 w-full">
+            <svg class="w-7 h-7 mx-auto accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 13v8" />
+  <path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242" />
+  <path d="m8 17 4-4 4 4" /></svg>
+            <p class="text-xs font-semibold ink-soft">Snap a store receipt photo</p>
+            <div class="space-y-2 px-4">
+              <input id="scanItemName" type="text" placeholder="Item (e.g. Almarai Milk 1L)" class="w-full text-xs rounded-lg px-3 py-2.5">
+              <div class="grid grid-cols-2 gap-2">
+                <input id="scanItemPrice" type="number" step="0.01" placeholder="Price (MVR)" class="w-full text-xs rounded-lg px-3 py-2.5">
+                <input id="scanItemShop" type="text" placeholder="Shop name" class="w-full text-xs rounded-lg px-3 py-2.5">
+              </div>
+              <select id="scanItemZone" class="w-full text-xs rounded-lg px-3 py-2.5">
+                <option value="male">Malé</option>
+                <option value="phase1">Hulhumalé Phase 1</option>
+                <option value="phase2">Hulhumalé Phase 2</option>
+              </select>
+            </div>
+            <button onclick="submitPrice()" class="btn-primary text-xs font-semibold px-5 py-2.5 rounded-lg transition">Submit for review</button>
+          </div>
+          <div id="scannerActiveView" class="hidden absolute inset-0 surface-2 flex flex-col items-center justify-center gap-2">
+            <svg class="w-6 h-6 accent animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-6.219-8.56" /></svg>
+            <p id="scanStatusText" class="text-xs font-semibold accent animate-pulse">Extracting prices…</p>
+          </div>
+        </div>
+        <p class="text-[10.5px] muted">Opens a pre-filled submission on GitHub (free account needed). It is public and reviewed before it goes live. Receipt-photo scanning is coming later.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADD PLACE MODAL -->
+  <div id="addPlaceModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop">
+    <div class="card w-full max-w-md overflow-hidden flex flex-col">
+      <div class="p-5 border-b hairline flex items-center justify-between">
+        <h3 class="serif font-semibold flex items-center gap-2"><svg class="w-4 h-4 accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19.914 11.105A7.298 7.298 0 0 0 20 10a8 8 0 0 0-16 0c0 4.993 5.539 10.193 7.399 11.799a1 1 0 0 0 1.202 0 32 32 0 0 0 .824-.738" />
+  <circle cx="12" cy="10" r="3" />
+  <path d="M16 18h6" />
+  <path d="M19 15v6" /></svg> Add a place</h3>
+        <div class="flex items-center gap-1"><button onclick="toggleModal('addPlaceModal')" class="muted hover:accent p-1" title="Close" aria-label="Close"><svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18" />
+  <path d="m6 6 12 12" /></svg></button></div>
+      </div>
+      <div class="p-5 space-y-3 text-xs">
+        <input id="placeName" type="text" placeholder="Place name" class="w-full rounded-lg px-3 py-2.5">
+        <input id="placeAddress" type="text" placeholder="Address / building" class="w-full rounded-lg px-3 py-2.5">
+        <div class="grid grid-cols-2 gap-2">
+          <select id="placeCategory" class="w-full rounded-lg px-3 py-2.5">
+            <option value="fihaara">Fihaara</option>
+            <option value="clinic">Clinic / Pharmacy</option>
+            <option value="services">Garage / Services</option>
+          </select>
+          <select id="placeZone" class="w-full rounded-lg px-3 py-2.5">
+            <option value="male">Malé</option>
+            <option value="phase1">Hulhumalé Phase 1</option>
+            <option value="phase2">Hulhumalé Phase 2</option>
+          </select>
+        </div>
+        <div class="flex flex-wrap gap-2 pt-1">
+          <label class="flex items-center gap-2 surface-2 hairline border px-3 py-2 rounded-lg cursor-pointer">
+            <input type="checkbox" id="placeFloor" class="rounded"><span class="text-[11px]">Free doorstep (5th fl.)</span>
+          </label>
+          <label class="flex items-center gap-2 surface-2 hairline border px-3 py-2 rounded-lg cursor-pointer">
+            <input type="checkbox" id="placeViber" class="rounded"><span class="text-[11px]">Accepts Viber slip</span>
+          </label>
+        </div>
+        <button onclick="submitPlace()" class="w-full btn-primary font-semibold py-2.5 rounded-lg transition">Submit for review</button>
+        <p class="text-[10.5px] muted">Opens a pre-filled submission on GitHub (free account needed). It is public and reviewed before it goes live.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADD EVENT MODAL -->
+  <div id="addEventModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop">
+    <div class="card w-full max-w-md overflow-hidden flex flex-col">
+      <div class="p-5 border-b hairline flex items-center justify-between">
+        <h3 class="serif font-semibold flex items-center gap-2"><svg class="w-4 h-4 accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 19h6" />
+  <path d="M16 2v4" />
+  <path d="M19 16v6" />
+  <path d="M21 12.598V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h8.5" />
+  <path d="M3 10h18" />
+  <path d="M8 2v4" /></svg> Add an event</h3>
+        <div class="flex items-center gap-1"><button onclick="toggleModal('addEventModal')" class="muted hover:accent p-1" title="Close" aria-label="Close"><svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18" />
+  <path d="m6 6 12 12" /></svg></button></div>
+      </div>
+      <div class="p-5 space-y-3 text-xs">
+        <input id="eventTitle" type="text" placeholder="Event title" class="w-full rounded-lg px-3 py-2.5">
+        <textarea id="eventDesc" placeholder="Short description" rows="2" class="w-full rounded-lg px-3 py-2.5 resize-none"></textarea>
+        <div class="grid grid-cols-2 gap-2">
+          <input id="eventLocation" type="text" placeholder="Location" class="w-full rounded-lg px-3 py-2.5">
+          <input id="eventTime" type="text" placeholder="e.g. 7:30 PM" class="w-full rounded-lg px-3 py-2.5">
+        </div>
+        <input id="eventHostedBy" type="text" placeholder="Hosted by (organizer, club, cafe...)" class="w-full rounded-lg px-3 py-2.5">
+        <div class="grid grid-cols-2 gap-2">
+          <select id="eventZone" class="w-full rounded-lg px-3 py-2.5">
+            <option value="male">Malé</option>
+            <option value="phase1">Hulhumalé Phase 1</option>
+            <option value="phase2">Hulhumalé Phase 2</option>
+          </select>
+          <input id="eventStartDate" type="date" class="w-full rounded-lg px-3 py-2.5">
+        </div>
+        <button onclick="submitEvent()" class="w-full btn-primary font-semibold py-2.5 rounded-lg transition">Submit for review</button>
+        <p class="text-[10.5px] muted">Opens a pre-filled submission on GitHub (free account needed). It is public and reviewed before it goes live.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- EVENT DETAIL MODAL -->
+  <div id="eventDetailModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop">
+    <div class="card w-full max-w-md overflow-hidden flex flex-col">
+      <div class="p-5 border-b hairline flex items-start justify-between gap-3">
+        <div class="min-w-0">
+          <p class="eyebrow accent" id="eventDetailZoneTag"></p>
+          <h3 class="serif font-semibold text-lg leading-tight mt-1" id="eventDetailTitle"></h3>
+        </div>
+        <div class="flex items-center gap-1 shrink-0"><button onclick="toggleModal('eventDetailModal')" class="muted hover:accent p-1" title="Close" aria-label="Close"><svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18" />
+  <path d="m6 6 12 12" /></svg></button></div>
+      </div>
+      <div class="p-5 space-y-4 text-xs">
+        <p id="eventDetailStatusBadge" class="inline-flex items-center gap-1.5 text-[10.5px] font-semibold px-2.5 py-1 rounded-full"></p>
+
+        <p id="eventDetailDescription" class="text-[13px] ink-soft leading-relaxed"></p>
+
+        <div class="space-y-2.5 pt-1 border-t hairline">
+          <div class="flex items-start gap-2.5 pt-3">
+            <svg class="w-4 h-4 accent shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" />
+  <path d="M12 6v6l4 2" /></svg>
+            <div>
+              <p class="eyebrow leading-none">When</p>
+              <p class="ink font-medium mt-0.5" id="eventDetailTime"></p>
+            </div>
+          </div>
+          <div class="flex items-start gap-2.5">
+            <svg class="w-4 h-4 accent shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0" />
+  <circle cx="12" cy="10" r="3" /></svg>
+            <div>
+              <p class="eyebrow leading-none">Where</p>
+              <p class="ink font-medium mt-0.5" id="eventDetailLocation"></p>
+            </div>
+          </div>
+          <div id="eventDetailHostedByRow" class="hidden items-start gap-2.5">            <svg class="w-4 h-4 accent shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 6a13 13 0 0 0 8.4-2.8A1 1 0 0 1 21 4v12a1 1 0 0 1-1.6.8A13 13 0 0 0 11 14H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2z" />
+  <path d="M6 14a12 12 0 0 0 2.4 7.2 2 2 0 0 0 3.2-2.4A8 8 0 0 1 10 14" />
+  <path d="M8 6v8" /></svg>
+            <div>
+              <p class="eyebrow leading-none">Hosted by</p>
+              <p class="ink font-medium mt-0.5" id="eventDetailHostedBy"></p>
+            </div>
+          </div>
+          <div class="flex items-start gap-2.5">
+            <svg class="w-4 h-4 accent shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
+  <circle cx="12" cy="7" r="4" /></svg>
+            <div>
+              <p class="eyebrow leading-none">Posted by</p>
+              <p class="ink font-medium mt-0.5" id="eventDetailAddedBy"></p>
+            </div>
+          </div>
+        </div>
+
+        <a id="eventDetailDirectionsBtn" href="#" target="_blank" rel="noopener noreferrer" class="btn-primary text-xs font-semibold px-4 py-2 rounded-lg transition w-full block text-center">
+          <span class="inline-flex items-center gap-1.5"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+  <circle cx="12" cy="10" r="3" /></svg> Get directions →</span>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- PRAYER DETAIL MODAL -->
+  <div id="prayerDetailModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop">
+    <div class="card w-full max-w-md overflow-hidden flex flex-col">
+      <div class="p-5 border-b hairline flex items-start justify-between gap-3">
+        <div class="min-w-0">
+          <p class="eyebrow accent">Prayer Times · Greater Malé</p>
+          <h3 class="serif font-semibold text-lg leading-tight mt-1"><span id="prayerModalNextName"></span> <span class="muted font-normal text-sm">at</span> <span id="prayerModalNextTime" class="mono"></span></h3>
+          <p id="prayerModalCountdown" class="mono text-[13px] font-semibold accent mt-1 tracking-tight"></p>
+        </div>
+        <div class="flex items-center gap-1 shrink-0"><button onclick="toggleModal('prayerDetailModal')" class="muted hover:accent p-1" title="Close" aria-label="Close"><svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18" />
+  <path d="m6 6 12 12" /></svg></button></div>
+      </div>
+      <div class="p-5 space-y-1.5 text-xs">
+        <div id="prayerModalList" class="space-y-1.5"></div>
+        <p id="prayerModalSourceNote" class="text-[10px] muted pt-2 text-center"></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- LEADERBOARD MODAL -->
+  <div id="leaderboardModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop">
+    <div class="card w-full max-w-md p-5 space-y-3">
+      <div class="flex justify-between items-center border-b hairline pb-3">
+        <h3 class="serif font-semibold">Top city contributors</h3>
+        <div class="flex items-center gap-1"><button onclick="toggleModal('leaderboardModal')" class="muted hover:accent p-1" title="Close" aria-label="Close"><svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18" />
+  <path d="m6 6 12 12" /></svg></button></div>
+      </div>
+      <div id="leaderboardList" class="text-xs space-y-2"></div>
+      <p class="text-[10.5px] muted pt-1">Points earned per submission — receipts +15, places +10, events +10.</p>
+    </div>
+  </div>
+
+  <!-- EMERGENCY NUMBERS MODAL: numbers sourced from Maldives Police Service's own
+       website and official account — the two agree with each other, unlike several
+       third-party travel-blog listings which conflict on the exact digits. Each row
+       is a tel: link so tapping it opens the phone app's dialer directly. -->
+  <div id="emergencyModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop">
+    <div class="card w-full max-w-md overflow-hidden flex flex-col">
+      <div class="p-5 border-b hairline flex items-start justify-between gap-3">
+        <div class="min-w-0">
+          <p class="eyebrow accent">In an emergency</p>
+          <h3 class="serif font-semibold text-lg leading-tight mt-1">Emergency numbers</h3>
+        </div>
+        <button onclick="toggleModal('emergencyModal')" class="muted hover:accent p-1 shrink-0" title="Close" aria-label="Close">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18" />
+  <path d="m6 6 12 12" /></svg>
+        </button>
+      </div>
+      <div class="p-5 space-y-2 text-xs">
+        <a href="tel:119" class="card flex items-center justify-between gap-3 p-3.5 cursor-pointer" style="border-color:var(--accent);">
+          <div><p class="font-semibold text-sm">Police / General emergency</p><p class="muted mt-0.5">Maldives Police Service</p></div>
+          <p class="mono font-bold text-lg accent shrink-0">119</p>
+        </a>
+        <a href="tel:118" class="card flex items-center justify-between gap-3 p-3.5 cursor-pointer">
+          <div><p class="font-semibold text-sm">Fire</p><p class="muted mt-0.5">MNDF Fire &amp; Rescue</p></div>
+          <p class="mono font-bold text-lg accent shrink-0">118</p>
+        </a>
+        <a href="tel:102" class="card flex items-center justify-between gap-3 p-3.5 cursor-pointer">
+          <div><p class="font-semibold text-sm">Ambulance</p><p class="muted mt-0.5">Medical emergencies</p></div>
+          <p class="mono font-bold text-lg accent shrink-0">102</p>
+        </a>
+        <a href="tel:+9603322111" class="card flex items-center justify-between gap-3 p-3.5 cursor-pointer">
+          <div><p class="font-semibold text-sm">Police hotline</p><p class="muted mt-0.5">Non-emergency / general inquiries</p></div>
+          <p class="mono font-bold text-base accent shrink-0">332 2111</p>
+        </a>
+        <a href="tel:+9609790163" class="card flex items-center justify-between gap-3 p-3.5 cursor-pointer">
+          <div><p class="font-semibold text-sm">Family &amp; Child Protection</p><p class="muted mt-0.5">Maldives Police Service</p></div>
+          <p class="mono font-bold text-base accent shrink-0">979 0163</p>
+        </a>
+        <p class="text-[10px] muted pt-1 text-center">Tap any number to call. Save these to your phone before you need them.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- REPORT ISSUE MODAL: category, comment, location text field (with a Google Maps
+       directions link built from whatever's typed), submit, and a feed of previously
+       reported issues (labelled samples plus your own reports on this device). Submitting
+       opens a public GitHub issue — that is where other people see the report. -->
+  <div id="reportIssueModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop">
+    <div class="card w-full max-w-lg max-h-[85vh] overflow-hidden flex flex-col">
+      <div class="p-5 border-b hairline flex items-start justify-between gap-3 shrink-0">
+        <div class="min-w-0">
+          <p class="eyebrow accent">Civic reporting</p>
+          <h3 class="serif font-semibold text-lg leading-tight mt-1">Report a city issue</h3>
+        </div>
+        <button onclick="toggleModal('reportIssueModal')" class="muted hover:accent p-1 shrink-0" title="Close" aria-label="Close">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18" />
+  <path d="m6 6 12 12" /></svg>
+        </button>
+      </div>
+      <div class="p-5 space-y-4 overflow-y-auto text-xs">
+        <div>
+          <p class="eyebrow mb-2">Category</p>
+          <div class="flex flex-wrap gap-2" id="issueCategoryChips">
+            <button onclick="setIssueCategory('pothole')" data-cat="pothole" class="cat-btn active py-1.5 px-3.5 rounded-lg whitespace-nowrap inline-flex items-center gap-1.5">
+              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3" /><path d="M12 9v4" /><path d="M12 17h.01" /></svg> Pothole
+            </button>
+            <button onclick="setIssueCategory('streetlight')" data-cat="streetlight" class="cat-btn py-1.5 px-3.5 rounded-lg whitespace-nowrap inline-flex items-center gap-1.5">
+              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6" /><path d="M10 22h4" /><path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5.6.6 1.13 1.28 1.41 2.5" /></svg> Streetlight
+            </button>
+            <button onclick="setIssueCategory('trash')" data-cat="trash" class="cat-btn py-1.5 px-3.5 rounded-lg whitespace-nowrap inline-flex items-center gap-1.5">
+              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" /><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /></svg> Trash pile
+            </button>
+          </div>
+        </div>
+        <div>
+          <p class="eyebrow mb-1.5">Comment</p>
+          <textarea id="issueComment" rows="3" placeholder="Describe the issue..." class="w-full rounded-lg px-3 py-2.5 text-sm"></textarea>
+        </div>
+        <div>
+          <p class="eyebrow mb-1.5">Location details</p>
+          <input id="issueLocation" type="text" placeholder="e.g. Near Hiyaa Tower 7, Phase 2" class="w-full rounded-lg px-3 py-2.5 text-sm" oninput="updateIssueLocationHelper()">
+          <p id="issueLocationHelper" class="text-[10.5px] muted mt-1">Add details of nearby place from Google Maps</p>
+          <button onclick="openIssueDirections()" class="text-xs font-semibold link-accent mt-1.5 inline-flex items-center gap-1">Get directions →</button>
+        </div>
+        <button onclick="submitIssueReport()" class="btn-primary text-xs font-semibold px-4 py-2.5 rounded-lg transition w-full">Submit report on GitHub</button>
+        <p class="text-[10.5px] muted -mt-2">Opens a public GitHub issue (free account needed). A copy is also kept on this device.</p>
+
+        <div class="border-t hairline pt-4">
+          <p class="eyebrow mb-2">Your reports &amp; examples</p>
+          <div id="issuesList" class="space-y-2.5"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- WEATHER MODAL: next 6 hours of forecast for Malé, from Open-Meteo. Opened by
+       tapping the compact header chip. -->
+  <div id="weatherModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop">
+    <div class="card w-full max-w-md overflow-hidden flex flex-col">
+      <div class="p-5 border-b hairline flex items-start justify-between gap-3">
+        <div class="min-w-0">
+          <p class="eyebrow accent">Malé weather</p>
+          <h3 class="serif font-semibold text-lg leading-tight mt-1">Next 6 hours</h3>
+        </div>
+        <button onclick="toggleModal('weatherModal')" class="muted hover:accent p-1 shrink-0" title="Close" aria-label="Close">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18" />
+  <path d="m6 6 12 12" /></svg>
+        </button>
+      </div>
+      <div class="space-y-3">
+        <div id="weatherHourlyList" class="p-5 pb-2 flex gap-4 overflow-x-auto text-center text-xs"></div>
+        <p id="weatherFallbackNote" class="hidden text-[10px] muted italic text-center px-5 pb-4">Estimated — live forecast unavailable.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- SIM COMPARE MODAL: shows Ooredoo vs Dhiraagu tourist packages side by side, with a
+       Physical SIM / eSIM toggle (Dhiraagu's lineup differs by type; Ooredoo's doesn't,
+       but stays consistent under the same toggle). Data-driven off SIM_PACKAGES in JS.
+       Each carrier's column ends with a button through to that carrier's official page,
+       once the person has had a chance to compare both. -->
+  <div id="simPackagesModal" class="hidden fixed inset-0 z-[100] flex items-center justify-center p-4 modal-backdrop">
+    <div class="card w-full max-w-3xl max-h-[85vh] overflow-hidden flex flex-col">
+      <div class="p-5 border-b hairline flex items-start justify-between gap-3 shrink-0">
+        <div class="min-w-0">
+          <p class="eyebrow accent">Getting connected</p>
+          <h3 class="serif font-semibold text-lg leading-tight mt-1">Compare tourist SIM packages</h3>
+        </div>
+        <button onclick="toggleModal('simPackagesModal')" class="muted hover:accent p-1 shrink-0" title="Close" aria-label="Close">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18" />
+  <path d="m6 6 12 12" /></svg>
+        </button>
+      </div>
+      <div id="simTypeChips" class="px-5 pt-4 flex flex-wrap gap-2 shrink-0"></div>
+      <div id="simCompareGrid" class="p-5 pt-4 space-y-3 overflow-y-auto"></div>
+    </div>
+  </div>
+
+  <!-- PLACE RECOMMENDATION MODAL: the "hover card" for a Places to Visit item. Content
+       is written like an actual local's tip (specific timing, what's worth doing there),
+       not a reprinted encyclopedia description — that's the whole point of it being
+       "from MaList" rather than just linking to a Wikipedia-style summary. -->
+  <div id="placeRecommendationModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop">
+    <div class="card w-full max-w-md overflow-hidden flex flex-col">
+      <div class="p-5 border-b hairline flex items-start justify-between gap-3">
+        <div class="min-w-0">
+          <p class="eyebrow accent">MaList Insider Tip</p>
+          <h3 id="placeRecName" class="serif font-semibold text-lg leading-tight mt-1"></h3>
+        </div>
+        <button onclick="toggleModal('placeRecommendationModal')" class="muted hover:accent p-1 shrink-0" title="Close" aria-label="Close">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18" />
+  <path d="m6 6 12 12" /></svg>
+        </button>
+      </div>
+      <div class="p-5 space-y-3 text-xs">
+        <p id="placeRecTip" class="leading-relaxed"></p>
+        <p class="text-[10px] muted pt-1 border-t hairline">Curated by people who actually live here — not a reprinted guidebook description.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ATM LOCATOR MODAL: Velana airport money exchange / ATM locations, split into
+       International and Domestic terminal areas since travelers land in one or the
+       other. Same blur backdrop as the other guide-page modals. -->
+  <div id="atmLocatorModal" class="hidden fixed inset-0 z-[100] flex items-center justify-center p-4 modal-backdrop">
+    <div class="card w-full max-w-md overflow-hidden flex flex-col">
+      <div class="p-5 border-b hairline flex items-start justify-between gap-3">
+        <div class="min-w-0">
+          <p class="eyebrow accent">Money</p>
+          <h3 class="serif font-semibold text-lg leading-tight mt-1">ATMs &amp; currency exchange</h3>
+          <p class="text-xs muted mt-1 leading-relaxed">Easily reachable within Velana International Airport.</p>
+        </div>
+        <button onclick="toggleModal('atmLocatorModal')" class="muted hover:accent p-1 shrink-0" title="Close" aria-label="Close">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18" />
+  <path d="m6 6 12 12" /></svg>
+        </button>
+      </div>
+      <div class="p-5 space-y-4 text-xs">
+        <div class="space-y-2">
+          <p class="eyebrow">International terminal</p>
+          <div class="space-y-1.5">
+            <div class="flex items-start gap-2"><span class="w-1.5 h-1.5 rounded-full accent-dot shrink-0 mt-1.5" style="background:var(--accent);"></span><span>1 Bank of Maldives Exchange Counter in Arrivals</span></div>
+            <div class="flex items-start gap-2"><span class="w-1.5 h-1.5 rounded-full shrink-0 mt-1.5" style="background:var(--accent);"></span><span>1 Bank of Maldives Exchange Counter</span></div>
+            <div class="flex items-start gap-2"><span class="w-1.5 h-1.5 rounded-full shrink-0 mt-1.5" style="background:var(--accent);"></span><span>2 ATMs outside the departure terminal</span></div>
+            <div class="flex items-start gap-2"><span class="w-1.5 h-1.5 rounded-full shrink-0 mt-1.5" style="background:var(--border);"></span><span class="muted">(1 Bank of Maldives and 1 Habib Bank)</span></div>
+          </div>
+        </div>
+        <div class="space-y-2 border-t hairline pt-3">
+          <p class="eyebrow">Domestic terminal</p>
+          <div class="space-y-1.5">
+            <div class="flex items-start gap-2"><span class="w-1.5 h-1.5 rounded-full shrink-0 mt-1.5" style="background:var(--accent);"></span><span>3 ATMs outside the terminal (2 BML MVR ATMs &amp; 1 BML USD ATM)</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOURIST GUIDE PAGE: a full page (not a compact modal) embedded in this same file,
+       opened from the "New to the capital?" banner. Sits above everything else and is
+       independently scrollable so the guide itself can be long-form. -->
+  <div id="touristGuidePage" class="hidden fixed inset-0 z-50 overflow-y-auto" style="background:var(--bg);">
+    <div class="sticky top-0 z-[100] surface hairline border-b px-5 py-4 flex items-center gap-3" style="background:var(--surface);">
+      <button onclick="closeTouristGuide()" class="muted hover:accent flex items-center gap-1 py-1 pr-2 -ml-1 shrink-0" title="Back" aria-label="Back">
+        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6" /></svg>
+        <span class="text-xs font-semibold">Back</span>
+      </button>
+      <div class="min-w-0">
+        <p class="eyebrow accent leading-none">Getting started</p>
+        <h2 class="serif font-semibold text-lg leading-tight mt-0.5">New to Malé? Here's what to know</h2>
+      </div>
+    </div>
+
+    <div class="max-w-md md:max-w-2xl mx-auto w-full px-5 py-6 pb-16 guide-content">
+
+      <!-- 1. BEFORE YOU LAND -->
+      <section class="card p-4 space-y-2.5">
+        <p class="eyebrow accent">Before you land</p>
+        <div class="flex items-start gap-2.5">
+          <div class="w-7 h-7 rounded-full flex items-center justify-center shrink-0 mt-0.5" style="background:var(--surface-2);">
+            <svg class="w-3.5 h-3.5 accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22c-4.97-2-9-6.5-9-11.5V4l9-2 9 2v6.5c0 5-4.03 9.5-9 11.5" /></svg>
+          </div>
+          <p class="text-xs leading-relaxed"><strong>Register on IMUGA at least 96 hours before landing</strong> — every passenger, including children, needs the Digital Traveller Declaration. It's fully digital now; there's no paper form. Skipping this is the most common cause of delays at immigration.</p>
+        </div>
+        <a href="https://imuga.immigration.gov.mv/traveller/declaration" target="_blank" rel="noopener noreferrer" class="btn-primary text-xs font-semibold px-4 py-2 rounded-lg transition w-full block text-center">Complete IMUGA declaration →</a>
+        <p class="text-[10.5px] leading-relaxed rounded-lg p-2.5" style="background:color-mix(in srgb, var(--accent) 10%, transparent); color:var(--ink-soft);">⚠️ <strong>Watch for scam sites.</strong> The IMUGA declaration is always free on the official government portal above. Some third-party sites charge a $30–40 "processing fee" for the same free form — don't pay for this anywhere else.</p>
+        <div class="flex items-start gap-2.5">
+          <div class="w-7 h-7 rounded-full flex items-center justify-center shrink-0 mt-0.5" style="background:var(--surface-2);">
+            <svg class="w-3.5 h-3.5 accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z" />
+  <path d="M10 4h4" /></svg>
+          </div>
+          <p class="text-xs leading-relaxed"><strong>Free 30-day visa on arrival</strong> for every nationality — just a valid passport, onward ticket, and confirmed accommodation. Nothing to apply for in advance.</p>
+        </div>
+        <div class="flex items-start gap-2.5">
+          <div class="w-7 h-7 rounded-full flex items-center justify-center shrink-0 mt-0.5" style="background:var(--surface-2);">
+            <svg class="w-3.5 h-3.5 accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" />
+  <path d="m4.9 4.9 14.2 14.2" /></svg>
+          </div>
+          <p class="text-xs leading-relaxed">Since 2025, <strong>holders of Israeli passports are not permitted entry</strong> under an amendment to the Immigration Act. Dual nationals can still enter on a passport from another country.</p>
+        </div>
+      </section>
+
+      <!-- 2. MONEY -->
+      <section class="card p-4 space-y-2.5">
+        <p class="eyebrow accent">Money</p>
+        <p class="text-xs leading-relaxed">Currency is the Maldivian <strong>Rufiyaa (MVR)</strong>. USD is widely accepted for tourist-facing spots, but Rufiyaa is genuinely useful for local shops, inter-island ferries, and street food. A currency exchange counter and ATMs are right in the arrivals hall.</p>
+        <button onclick="toggleModal('atmLocatorModal')" class="btn-primary text-xs font-semibold px-4 py-2 rounded-lg transition w-full">Locate ATMs →</button>
+      </section>
+
+      <!-- 3. CONNECTIVITY -->
+      <section class="card p-4 space-y-2.5">
+        <p class="eyebrow accent">Getting connected</p>
+        <p class="text-xs leading-relaxed">Dhiraagu and Ooredoo SIM counters are in the arrivals hall with tourist data packages that activate instantly — one of the easiest first-hour tasks at the airport.</p>
+        <button onclick="openSimPackages()" class="btn-primary text-xs font-semibold px-4 py-2 rounded-lg transition w-full">Compare SIM packages →</button>
+      </section>
+
+      <!-- 4. CULTURE & ETIQUETTE -->
+      <section class="card p-4 space-y-2" style="border-color:var(--accent);">
+        <p class="eyebrow accent">Culture &amp; etiquette — please read</p>
+        <p class="text-xs leading-relaxed">The Maldives is a 100% Islamic nation. <strong>Alcohol, pork products, and religious materials deemed offensive to Islam are strictly prohibited</strong> and will be confiscated at customs — even duty-free alcohol bought before departure. Dress modestly in Malé and on inhabited islands (swimwear is for resort/tourist beaches only). Public life pauses briefly around prayer times — check the live prayer chip on the home screen so you're not caught off guard.</p>
+      </section>
+
+      <!-- 5. GETTING INTO THE CITY (moved to the end; deep-links out to the official RTL site) -->
+      <section class="card p-4 space-y-3">
+        <p class="eyebrow accent">Getting from the airport into the city</p>
+        <p class="text-xs muted leading-relaxed -mt-1">Velana International Airport sits on its own island — you'll cross a short stretch of water to reach Malé or Hulhumalé no matter what.</p>
+        <div class="space-y-2 text-xs">
+          <div class="flex items-center justify-between gap-3 py-2 border-b hairline">
+            <div><p class="font-semibold">Public ferry</p><p class="muted mt-0.5">~10 min crossing</p></div>
+            <p class="mono font-semibold accent">~$1.50</p>
+          </div>
+          <div class="flex items-center justify-between gap-3 py-2 border-b hairline">
+            <div><p class="font-semibold">RTL bus R3</p><p class="muted mt-0.5">Airport → Malé, hourly, card only</p></div>
+            <p class="mono font-semibold accent">~10 MVR</p>
+          </div>
+          <div class="flex items-center justify-between gap-3 py-2">
+            <div><p class="font-semibold">Taxi to ferry terminal</p><p class="muted mt-0.5">~7–10 min</p></div>
+            <p class="mono font-semibold accent">~75 MVR</p>
+          </div>
+        </div>
+        <p class="text-[10.5px] muted leading-relaxed">💳 Any contactless Mastercard or Visa card works to tap and pay on RTL buses and ferries — no local transit card or cash needed.</p>
+        <a href="https://rtl.mv/#/busticket" target="_blank" rel="noopener noreferrer" class="btn-primary text-xs font-semibold px-4 py-2 rounded-lg transition w-full block text-center">See live bus &amp; ferry times →</a>
+      </section>
+
+      <p class="text-center text-[10.5px] muted pt-2 guide-full">Information current as of 2026 · always confirm time-sensitive details (visa rules, fares) before you travel</p>
+    </div>
+
+    <!-- Same bottom-right FAB spot as the homepage's scan button, but this page isn't
+         about scanning receipts — it's a back-to-home action instead. -->
+    <div class="fixed bottom-5 right-5 z-40">
+      <button onclick="closeTouristGuide()" class="flex items-center justify-center w-14 h-14 rounded-full shadow-lg active:scale-95 transition-all" title="Back to home" aria-label="Back to home" style="background:var(--ink); box-shadow:0 10px 30px -8px rgba(0,0,0,0.35);">
+        <svg class="w-5 h-5" style="color:var(--bg);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 19-7-7 7-7" />
+  <path d="M19 12H5" /></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- TOAST -->
+  <div id="toast" class="hidden fixed bottom-24 md:bottom-8 left-1/2 -translate-x-1/2 z-[60] text-xs font-semibold px-4 py-2.5 rounded-full shadow-lg flex items-center gap-2 toast" style="background:var(--ink); color:var(--bg);">
+    <svg class="w-4 h-4" style="color:var(--accent)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" />
+  <path d="m9 12 2 2 4-4" /></svg>
+    <span id="toastText">Saved</span>
+  </div>
+
+  <script src="js/app.js"></script>
+</body>
+</html>

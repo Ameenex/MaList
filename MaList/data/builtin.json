@@ -1,0 +1,256 @@
+{
+  "_readme": "Built-in content that ships with the site. 'events' are real, verified listings and always show. Everything under 'samples' is made-up example content: it only shows when data/data.json has no community entries of that kind, and is labelled 'Example' in the UI. Sample event startDate may be 'today' or 'weekend' (resolved at load time); sample prices use daysAgo.",
+  "events": [
+    {
+      "id": "e4",
+      "title": "Independence Day Week-Long Carnival",
+      "startDate": "2026-07-24",
+      "endDate": "2026-07-31",
+      "time": "16:00–23:00 daily",
+      "location": "Central Park, Hulhumalé Phase 1",
+      "zone": "phase1",
+      "description": "A festive, family-friendly evening carnival featuring dynamic carnival games, an interactive digital gaming arena, massive inflatable attractions, a custom horror house, alongside live music and traditional Boduberu cultural performances.",
+      "hostedBy": "Housing Development Corporation (HDC) & Official Events",
+      "addedBy": "Gov.mv Official Notice"
+    },
+    {
+      "id": "e5",
+      "title": "Official Independence Day Flag-Raising Ceremony",
+      "startDate": "2026-07-26",
+      "endDate": null,
+      "time": "06:00",
+      "location": "Republic Square, Malé",
+      "zone": "male",
+      "description": "The official national flag-raising ceremony commemorating 61 years of independence, attended by state leadership. Includes special holiday recitations and a formal performance of the national anthem by the MNDF military band.",
+      "hostedBy": "Government of Maldives & Maldives National Defence Force (MNDF)",
+      "addedBy": "Gov.mv Official Notice"
+    },
+    {
+      "id": "e6",
+      "title": "Independence Day Sports and Cultural Activities",
+      "startDate": "2026-07-26",
+      "endDate": null,
+      "time": "16:15",
+      "location": "Republic Square, Malé",
+      "zone": "male",
+      "description": "A public display of national pride featuring high-precision military drills by the MNDF, a National Cadet Corps parade, performances from local school groups, and traditional cultural activities.",
+      "hostedBy": "Ministry of Cities, Local Government and Public Works & Malé City Council",
+      "addedBy": "Gov.mv Official Notice"
+    },
+    {
+      "id": "e7",
+      "title": "Malé Independence Day Fireworks",
+      "startDate": "2026-07-27",
+      "endDate": null,
+      "time": "20:30",
+      "location": "Social Centre area, Malé",
+      "zone": "male",
+      "description": "An evening fireworks display in the capital marking the 61st Independence Day, the night after the main flag-raising and parade.",
+      "hostedBy": "Government of Maldives",
+      "addedBy": "Gov.mv Official Notice"
+    },
+    {
+      "id": "e8",
+      "title": "Malé Independence Day Parade & Route March",
+      "startDate": "2026-07-26",
+      "endDate": null,
+      "time": "16:15",
+      "location": "Majeedhee Magu & Boduthakurufaanu Magu (Social Centre to Henveiru Bridge area)",
+      "zone": "male",
+      "description": "A parade and route march through the capital island alongside the MNDF military drill, featuring floats reflecting traditional Maldivian history, local folklore, and maritime national identity.",
+      "hostedBy": "Ministry of Cities, Local Government and Public Works & Malé City Council",
+      "addedBy": "Gov.mv Official Notice"
+    },
+    {
+      "id": "e9",
+      "title": "Hulhumalé Independence Day Parade",
+      "startDate": "2026-07-27",
+      "endDate": null,
+      "time": "16:15",
+      "location": "Main Streets, Hulhumalé (Phases 1 & 2)",
+      "zone": "phase1",
+      "description": "Hulhumalé mirrors Malé's July 26 program a day later: military drill, cadet and school-group performances, and a float procession through the core avenues of both phases.",
+      "hostedBy": "Housing Development Corporation (HDC)",
+      "addedBy": "Gov.mv Official Notice"
+    },
+    {
+      "id": "e10",
+      "title": "Hulhumalé Float Display & Exhibition Night",
+      "startDate": "2026-07-28",
+      "endDate": null,
+      "time": "20:30",
+      "location": "Central Park, Hulhumalé Phase 1",
+      "zone": "phase1",
+      "description": "A close-up public exhibition of the official holiday floats gathered at Central Park, accompanied by live cultural entertainment and community gatherings.",
+      "hostedBy": "Housing Development Corporation (HDC)",
+      "addedBy": "Gov.mv Official Notice"
+    }
+  ],
+  "samples": {
+    "shops": [
+      {
+        "id": "s1",
+        "name": "Hiyala Corner Fihaara",
+        "category": "fihaara",
+        "zone": "phase2",
+        "address": "Hiyaa Tower 7, Ground Floor",
+        "freeFloorDelivery": true,
+        "acceptsViber": true,
+        "addedBy": "Hassan_Hulhu2"
+      },
+      {
+        "id": "s2",
+        "name": "Central Phase 1 Clinic & Pharmacy",
+        "category": "clinic",
+        "zone": "phase1",
+        "address": "Nirolhu Magu Goalhi 4",
+        "freeFloorDelivery": false,
+        "acceptsViber": true,
+        "addedBy": "Aish99"
+      },
+      {
+        "id": "s3",
+        "name": "Hiyaa Cycle Repair Garage",
+        "category": "services",
+        "zone": "phase2",
+        "address": "Hiyaa Tower 14, Commercial",
+        "freeFloorDelivery": false,
+        "acceptsViber": true,
+        "addedBy": "MotoFix_Ibbe"
+      },
+      {
+        "id": "s4",
+        "name": "Ihsaan Store",
+        "category": "fihaara",
+        "zone": "male",
+        "address": "Majeedhee Magu, Henveiru",
+        "freeFloorDelivery": true,
+        "acceptsViber": true,
+        "addedBy": "Nashfa"
+      },
+      {
+        "id": "s5",
+        "name": "VB Mart",
+        "category": "fihaara",
+        "zone": "phase1",
+        "address": "Ehchey Goalhi, Phase 1",
+        "freeFloorDelivery": false,
+        "acceptsViber": false,
+        "addedBy": "Hassan_Hulhu2"
+      },
+      {
+        "id": "s6",
+        "name": "Malé Central Pharmacy",
+        "category": "clinic",
+        "zone": "male",
+        "address": "Chandhanee Magu",
+        "freeFloorDelivery": false,
+        "acceptsViber": true,
+        "addedBy": "DrFathmath"
+      }
+    ],
+    "events": [
+      {
+        "id": "e1",
+        "title": "Central Park Night Market",
+        "startDate": "today",
+        "endDate": null,
+        "time": "7:30 PM",
+        "location": "Hulhumalé Central Park",
+        "zone": "phase1",
+        "description": "Local food stalls & acoustic music.",
+        "hostedBy": "Hulhumalé Community Council",
+        "addedBy": "EventsMV"
+      },
+      {
+        "id": "e2",
+        "title": "Ekuveni Futsal Quarter Finals",
+        "startDate": "today",
+        "endDate": null,
+        "time": "8:00 PM",
+        "location": "Malé Ekuveni Grounds",
+        "zone": "male",
+        "description": "Community inter-office tournament.",
+        "hostedBy": "Malé Inter-Office Futsal League",
+        "addedBy": "FutsalMale"
+      },
+      {
+        "id": "e3",
+        "title": "Phase 2 Diving Taster Workshop",
+        "startDate": "weekend",
+        "endDate": null,
+        "time": "9:00 AM",
+        "location": "Hiyaa Beach Access, Phase 2",
+        "zone": "phase2",
+        "description": "Beginner-friendly dive intro, gear provided.",
+        "hostedBy": "Hiyaa Reef Divers",
+        "addedBy": "ReefDivers"
+      }
+    ],
+    "commodities": [
+      {
+        "id": "c1",
+        "name": "Almarai Milk 1L",
+        "price": 27.5,
+        "shop": "VB Mart",
+        "zone": "phase1",
+        "addedBy": "Hassan_Hulhu2",
+        "daysAgo": 2
+      },
+      {
+        "id": "c2",
+        "name": "Fresh Egg Tray (30s)",
+        "price": 72.0,
+        "shop": "Ihsaan Store",
+        "zone": "male",
+        "addedBy": "Nashfa",
+        "daysAgo": 5
+      },
+      {
+        "id": "c3",
+        "name": "Rice 5kg Bag",
+        "price": 65.0,
+        "shop": "Hiyala Corner Fihaara",
+        "zone": "phase2",
+        "addedBy": "Hassan_Hulhu2",
+        "daysAgo": 1
+      }
+    ],
+    "leaderboard": {
+      "Hassan_Hulhu2": 2840,
+      "Aish99": 1920,
+      "Nashfa": 1440,
+      "EventsMV": 980,
+      "MotoFix_Ibbe": 720
+    },
+    "issues": [
+      {
+        "id": "i1",
+        "category": "pothole",
+        "comment": "Large pothole near the roundabout — cars are swerving into the other lane to avoid it.",
+        "location": "Boduthakurufaanu Magu, near West Park",
+        "zone": "male",
+        "likes": 14,
+        "addedBy": "Aish99"
+      },
+      {
+        "id": "i2",
+        "category": "streetlight",
+        "comment": "Streetlight's been out for over a week now, quite dark walking through here at night.",
+        "location": "Hiyaa Tower 7, Phase 2",
+        "zone": "phase2",
+        "likes": 6,
+        "addedBy": "Hassan_Hulhu2"
+      },
+      {
+        "id": "i3",
+        "category": "trash",
+        "comment": "Trash bins overflowing, hasn't been collected in a few days.",
+        "location": "Nirolhu Magu, Phase 1",
+        "zone": "phase1",
+        "likes": 9,
+        "addedBy": "Community"
+      }
+    ]
+  }
+}
