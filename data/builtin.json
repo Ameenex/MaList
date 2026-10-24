@@ -84,6 +84,42 @@
       "description": "A close-up public exhibition of the official holiday floats gathered at Central Park, accompanied by live cultural entertainment and community gatherings.",
       "hostedBy": "Housing Development Corporation (HDC)",
       "addedBy": "Gov.mv Official Notice"
+    },
+    {
+      "id": "e11",
+      "title": "Maldives Expo 2026",
+      "startDate": "2026-10-25",
+      "endDate": "2026-11-02",
+      "time": "Daily (hours to be announced)",
+      "location": "Central Park, Hulhumalé",
+      "zone": "phase1",
+      "description": "National exhibition of creativity and innovation, bringing five large-scale events together in one place. Districts cover the creative economy, digital & innovation, entertainment, a marketplace, the visitor economy and international exhibitors, plus a Boduberu Challenge and a Sagaafee Vaadha traditional performing-arts challenge. Check expo.mv for opening hours.",
+      "hostedBy": "Business Center Corporation (BCC)",
+      "addedBy": "expo.mv"
+    },
+    {
+      "id": "e12",
+      "title": "Victory Day (public holiday)",
+      "startDate": "2026-11-03",
+      "endDate": null,
+      "time": "All day",
+      "location": "Malé & Hulhumalé",
+      "zone": "male",
+      "description": "National holiday marking the defeat of the 3 November 1988 coup attempt. Flag-raising ceremonies are traditionally held in Malé; this year's official programme hasn't been announced yet. Government offices and many businesses are closed.",
+      "hostedBy": "Government of Maldives",
+      "addedBy": "Public holiday calendar"
+    },
+    {
+      "id": "e13",
+      "title": "Republic Day (public holiday)",
+      "startDate": "2026-11-11",
+      "endDate": null,
+      "time": "All day",
+      "location": "Malé & Hulhumalé",
+      "zone": "male",
+      "description": "National holiday marking the Maldives becoming a republic in 1968. No official programme has been announced yet. Government offices and many businesses are closed.",
+      "hostedBy": "Government of Maldives",
+      "addedBy": "Public holiday calendar"
     }
   ],
   "samples": {
