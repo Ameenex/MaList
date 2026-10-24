@@ -1,7 +1,17 @@
 {
   "version": 1,
-  "updated": null,
+  "updated": "2026-10-24T07:31:28.196Z",
   "shops": [],
   "events": [],
-  "commodities": []
+  "commodities": [
+    {
+      "id": "cp-1",
+      "name": "TEST item",
+      "price": 1.5,
+      "shop": "Test shop",
+      "zone": "male",
+      "addedBy": "Ameenex",
+      "ts": 1792827088196
+    }
+  ]
 }
