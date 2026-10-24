@@ -6,17 +6,6 @@ Live transit, prayer times, weather, events, a places directory, a crowdsourced 
 
 *Ma* in Dhivehi means "big" (and also "me"), so MaList is the big list.
 
-## How community data works
-
-The site is static. Approved community data lives in [`data/data.json`](data/data.json) and the site reads it on load. Nothing on the page can write to this repo, so there is no token or secret in the site code.
-
-1. Someone adds a place, event or price in the app. It opens a pre-filled GitHub issue (free GitHub account needed). Issues are public.
-2. A maintainer reviews the issue and comments `/approve` (or `/reject`).
-3. A GitHub Action (`.github/workflows/accept-submission.yml`) checks the data against a strict schema, strips markup, records the GitHub username as the author, and commits it to `data/data.json`. Only users with write access can approve.
-4. GitHub Pages republishes the site within a few minutes.
-
-Everything read from the data file is escaped before being shown, and malformed entries are skipped.
-
 ## Run locally
 
 It's a static site — no build step. Serve the folder over HTTP (the service worker needs it):
@@ -29,10 +18,14 @@ Then open http://localhost:8000.
 
 ## Files
 
-- `index.html` — the whole app (styles, scripts, icons and PWA manifest are inline)
-- `sw.js` — service worker for offline support
-- `data/data.json` — approved community submissions
-- `.github/` — submission form and the approval Action
+- `index.html` — page markup
+- `css/tailwind.css` — precompiled Tailwind utilities; `css/app.css` — the app's own styles and theme
+- `js/app.js` — all app logic
+- `manifest.webmanifest`, `icons/` — PWA install metadata and icons
+- `sw.js` — service worker for offline support (bump `CACHE` when the file list changes)
+- `data/data.json` — approved community submissions (written by the approval GitHub Action)
+- `data/builtin.json` — official events that always show, plus example content that only fills a list while the community has none (labelled "Example")
+- `data/advisories.json` — city advisories with expiry dates
 
 ## Deployment
 

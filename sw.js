@@ -1,7 +1,13 @@
 // MaList service worker — caches the app shell so it opens offline.
 // Live data (prayer times, weather) is always fetched from the network and never cached here.
-const CACHE = 'malist-shell-v1';
-const SHELL = ['./', './index.html'];
+// Bump CACHE whenever the shell file list changes so old caches are cleared.
+const CACHE = 'malist-shell-v2';
+const SHELL = [
+  './', './index.html', './css/tailwind.css', './css/app.css', './js/app.js',
+  './manifest.webmanifest', './data/builtin.json', './data/advisories.json',
+  './icons/icon-192.png', './icons/icon-512.png', './icons/icon-512-maskable.png',
+  './icons/apple-touch-icon.png', './icons/favicon.png'
+];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting()));
@@ -20,16 +26,20 @@ self.addEventListener('fetch', (event) => {
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
 
-  // Same-origin pages: network first (so updates show up), fall back to cache offline.
+  // Same-origin files: network first (so updates show up), fall back to cache offline.
+  // The cache key ignores the query string, so data/data.json?t=… still has an offline copy.
   if (url.origin === self.location.origin) {
+    const key = url.origin + url.pathname;
     event.respondWith(
       fetch(req)
         .then((res) => {
-          const copy = res.clone();
-          caches.open(CACHE).then((c) => c.put(req, copy));
+          if (res.ok) {
+            const copy = res.clone();
+            caches.open(CACHE).then((c) => c.put(key, copy));
+          }
           return res;
         })
-        .catch(() => caches.match(req).then((hit) => hit || caches.match('./index.html')))
+        .catch(() => caches.match(key).then((hit) => hit || (req.mode === 'navigate' ? caches.match('./index.html') : Response.error())))
     );
     return;
   }
