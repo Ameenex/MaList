@@ -1,0 +1,17 @@
+name: MaList submission
+description: Submit a place, event or price for review
+title: "[MaList] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for contributing to MaList!
+
+        **This issue is public.** A maintainer reviews every submission, and once approved it appears on the site. Please don't put phone numbers, home addresses or other private details in it.
+  - type: textarea
+    id: payload
+    attributes:
+      label: Submission data
+      description: Filled in automatically by MaList. Please leave it as it is.
+    validations:
+      required: true
