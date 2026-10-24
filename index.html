@@ -579,7 +579,7 @@
       <p class="serif ink font-medium text-sm">MaList</p>
       <p>All-in-one Greater Malé city portal</p>
       <p class="text-[10.5px]">Malé · Hulhumalé Phase 1 · Hulhumalé Phase 2</p>
-      <p class="text-[10px] pt-1">Community-submitted data is shared with everyone using this app.</p>
+      <p class="text-[10px] pt-1">Community data is reviewed, then published from this site's GitHub repo.</p>
     </footer>
   </main>
 
@@ -690,6 +690,8 @@
         </div>
         <button onclick="exitAdminPanel()" class="text-xs font-semibold link-accent flex items-center gap-1">← Exit to MaList</button>
       </div>
+
+      <p class="text-[10.5px] muted -mt-2">Edits here last for this session only. Permanent changes go through GitHub: approve a submission, or edit data/data.json in the repo.</p>
 
       <!-- ADMIN SECTION TABS -->
       <div class="flex p-1 surface-2 rounded-lg hairline border text-[11.5px] w-fit gap-1">
@@ -852,14 +854,14 @@
                 <option value="phase2">Hulhumalé Phase 2</option>
               </select>
             </div>
-            <button onclick="startSimulatedScan()" class="btn-primary text-xs font-semibold px-5 py-2.5 rounded-lg transition">Submit receipt</button>
+            <button onclick="submitPrice()" class="btn-primary text-xs font-semibold px-5 py-2.5 rounded-lg transition">Submit for review</button>
           </div>
           <div id="scannerActiveView" class="hidden absolute inset-0 surface-2 flex flex-col items-center justify-center gap-2">
             <svg class="w-6 h-6 accent animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-6.219-8.56" /></svg>
             <p id="scanStatusText" class="text-xs font-semibold accent animate-pulse">Extracting prices…</p>
           </div>
         </div>
-        <p class="text-[10.5px] muted">In the full app, OCR + an LLM extract this automatically from your photo. Here you can enter it directly to try the flow.</p>
+        <p class="text-[10.5px] muted">Opens a pre-filled submission on GitHub (free account needed). It is public and reviewed before it goes live. Receipt-photo scanning is coming later.</p>
       </div>
     </div>
   </div>
@@ -898,7 +900,8 @@
             <input type="checkbox" id="placeViber" class="rounded"><span class="text-[11px]">Accepts Viber slip</span>
           </label>
         </div>
-        <button onclick="submitPlace()" class="w-full btn-primary font-semibold py-2.5 rounded-lg transition">Add to directory</button>
+        <button onclick="submitPlace()" class="w-full btn-primary font-semibold py-2.5 rounded-lg transition">Submit for review</button>
+        <p class="text-[10.5px] muted">Opens a pre-filled submission on GitHub (free account needed). It is public and reviewed before it goes live.</p>
       </div>
     </div>
   </div>
@@ -932,7 +935,8 @@
           </select>
           <input id="eventStartDate" type="date" class="w-full rounded-lg px-3 py-2.5">
         </div>
-        <button onclick="submitEvent()" class="w-full btn-primary font-semibold py-2.5 rounded-lg transition">Submit event</button>
+        <button onclick="submitEvent()" class="w-full btn-primary font-semibold py-2.5 rounded-lg transition">Submit for review</button>
+        <p class="text-[10.5px] muted">Opens a pre-filled submission on GitHub (free account needed). It is public and reviewed before it goes live.</p>
       </div>
     </div>
   </div>
@@ -1450,32 +1454,78 @@
 
     let shopsData = [], eventsData = [], commoditiesData = [], leaderboard = {};
 
-    // ---------- Persistence ----------
-    async function loadData() {
-      try {
-        const [shopsRes, eventsRes, priceRes, boardRes] = await Promise.allSettled([
-          window.storage.get('shops', true),
-          window.storage.get('events', true),
-          window.storage.get('commodities', true),
-          window.storage.get('leaderboard', true)
-        ]);
-        shopsData = (shopsRes.status === 'fulfilled' && shopsRes.value) ? JSON.parse(shopsRes.value.value) : seedShops;
-        eventsData = (eventsRes.status === 'fulfilled' && eventsRes.value) ? JSON.parse(eventsRes.value.value) : seedEvents;
-        commoditiesData = (priceRes.status === 'fulfilled' && priceRes.value) ? JSON.parse(priceRes.value.value) : seedCommodities;
-        leaderboard = (boardRes.status === 'fulfilled' && boardRes.value) ? JSON.parse(boardRes.value.value) : seedLeaderboard;
-      } catch (e) {
-        shopsData = seedShops; eventsData = seedEvents; commoditiesData = seedCommodities; leaderboard = seedLeaderboard;
-      }
-      if (!shopsData.length) shopsData = seedShops;
-      if (!eventsData.length) eventsData = seedEvents;
-      if (!commoditiesData.length) commoditiesData = seedCommodities;
-      if (!Object.keys(leaderboard).length) leaderboard = seedLeaderboard;
+    // ---------- Data: community data file in the GitHub repo ----------
+    // Approved community submissions live in data/data.json in this repo. The site only
+    // READS that file; nothing on this page can write to the repo (so no token ever ships
+    // in the page). New submissions go through a pre-filled GitHub issue, and the repo owner
+    // approves them with "/approve" — a GitHub Action validates them and updates the file.
+    const REPO = 'Ameenex/MaList';
+    const POINTS = { shops: 10, events: 10, commodities: 15 };
+
+    // Everything that comes from the data file is treated as untrusted text and escaped
+    // before it is placed into HTML.
+    function esc(v) {
+      return String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
     }
-    async function saveShops() { try { await window.storage.set('shops', JSON.stringify(shopsData), true); } catch (e) {} }
-    async function saveEvents() { try { await window.storage.set('events', JSON.stringify(eventsData), true); } catch (e) {} }
-    async function saveCommodities() { try { await window.storage.set('commodities', JSON.stringify(commoditiesData), true); } catch (e) {} }
-    async function saveLeaderboard() { try { await window.storage.set('leaderboard', JSON.stringify(leaderboard), true); } catch (e) {} }
-    function awardPoints(user, pts) { leaderboard[user] = (leaderboard[user] || 0) + pts; saveLeaderboard(); }
+
+    // Defence in depth: even though the approval Action already validates everything, the site
+    // re-checks each entry and skips anything malformed rather than trusting the file blindly.
+    const ZONE_KEYS = ['male', 'phase1', 'phase2'];
+    const CAT_KEYS = ['fihaara', 'clinic', 'services'];
+    const okId = x => typeof x.id === 'string' && /^[a-z]{2}-\d{1,9}$/.test(x.id);
+    const okStr = v => typeof v === 'string' && v.length > 0 && v.length <= 600;
+    const VALID = {
+      shops: x => okId(x) && okStr(x.name) && okStr(x.address) && ZONE_KEYS.includes(x.zone) && CAT_KEYS.includes(x.category),
+      events: x => okId(x) && okStr(x.title) && okStr(x.location) && okStr(x.time) && ZONE_KEYS.includes(x.zone) && /^\d{4}-\d{2}-\d{2}$/.test(x.startDate || '') && (!x.endDate || /^\d{4}-\d{2}-\d{2}$/.test(x.endDate)),
+      commodities: x => okId(x) && okStr(x.name) && okStr(x.shop) && ZONE_KEYS.includes(x.zone) && typeof x.price === 'number' && isFinite(x.price) && x.price > 0
+    };
+    function asList(v, kind) { return Array.isArray(v) ? v.filter(x => x && typeof x === 'object' && VALID[kind](x)) : []; }
+
+    async function fetchCommunityData() {
+      try {
+        const res = await fetch('./data/data.json?t=' + Date.now(), { cache: 'no-store' });
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const j = await res.json();
+        return { shops: asList(j.shops, 'shops'), events: asList(j.events, 'events'), commodities: asList(j.commodities, 'commodities') };
+      } catch (e) {
+        console.warn('Community data file unavailable, showing built-in sample data only:', e);
+        return { shops: [], events: [], commodities: [] };
+      }
+    }
+
+    async function loadData() {
+      const c = await fetchCommunityData();
+      // Newest community entries first, then the built-in samples.
+      shopsData = [...c.shops.slice().reverse(), ...seedShops];
+      eventsData = [...c.events.slice().reverse(), ...seedEvents];
+      commoditiesData = [...c.commodities.slice().reverse(), ...seedCommodities];
+      // Leaderboard: sample scores plus points earned from approved submissions.
+      leaderboard = { ...seedLeaderboard };
+      for (const kind of ['shops', 'events', 'commodities']) {
+        for (const item of c[kind]) {
+          const who = String(item.addedBy || '').slice(0, 40);
+          if (who) leaderboard[who] = (leaderboard[who] || 0) + POINTS[kind];
+        }
+      }
+    }
+
+    // The admin panel still edits the lists in memory for the current session, but nothing is
+    // written anywhere — permanent changes go through GitHub (approve a submission, or edit
+    // data/data.json in the repo). Kept as no-ops so the admin code stays as it was.
+    async function saveShops() {}
+    async function saveEvents() {}
+    async function saveCommodities() {}
+    async function saveLeaderboard() {}
+
+    // Opens a pre-filled GitHub issue for the submission. Must be called directly from a click
+    // handler (no await before it) or browsers will block the new tab as a popup.
+    function openSubmission(type, data, label) {
+      const payload = JSON.stringify({ v: 1, type, data });
+      const url = `https://github.com/${REPO}/issues/new?template=submission.yml`
+        + `&title=${encodeURIComponent('[MaList] ' + label.slice(0, 80))}`
+        + `&payload=${encodeURIComponent(payload)}`;
+      window.open(url, '_blank', 'noopener,noreferrer');
+    }
 
     // ---------- Boot ----------
     window.onload = async function () {
@@ -2176,10 +2226,10 @@
             <span class="inline-flex items-center gap-1.5 font-semibold accent">${ISSUE_CATEGORY_ICONS[i.category] || ''} <span class="ink">${ISSUE_CATEGORY_LABELS[i.category] || i.category}</span></span>
             <span class="text-[10px] px-2 py-0.5 rounded-full" style="background:var(--surface-2); color:var(--ink-soft);">${zoneShort[i.zone] || ''}</span>
           </div>
-          <p class="leading-relaxed">${i.comment}</p>
-          ${i.location ? `<p class="muted text-[10.5px]">📍 ${i.location}</p>` : ''}
+          <p class="leading-relaxed">${esc(i.comment)}</p>
+          ${i.location ? `<p class="muted text-[10.5px]">📍 ${esc(i.location)}</p>` : ''}
           <div class="flex items-center justify-between pt-1">
-            <span class="muted text-[10px]">Reported by ${i.addedBy}</span>
+            <span class="muted text-[10px]">Reported by ${esc(i.addedBy)}</span>
             <button onclick="likeIssue('${i.id}')" class="flex items-center gap-1 font-semibold accent">
               <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 10v12" /><path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2a3.13 3.13 0 0 1 3 3.88Z" /></svg>
               <span id="likeCount-${i.id}">${i.likes}</span>
@@ -2236,11 +2286,9 @@
       document.body.style.overflow = '';
     }
 
-    // ---------- Admin Access (demo-only client-side gate) ----------
-    // NOTE: this is a static prototype with no backend, so this password check is
-    // purely a UI gate for demo purposes — it is NOT real authentication. A production
-    // build would need real server-side auth before exposing any edit capability.
-    const ADMIN_PASSWORD = 'malist2026';
+    // ---------- Admin access removed from the public site ----------
+    // Moderation happens on GitHub (comment /approve or /reject on a submission issue).
+    // No password or admin entry point ships in this public page.
     let logoClickCount = 0;
     let logoClickTimer = null;
     let editingEventId = null; // null = creating a new event
@@ -2250,10 +2298,6 @@
       logoClickCount++;
       clearTimeout(logoClickTimer);
       logoClickTimer = setTimeout(() => { logoClickCount = 0; }, 2000);
-      if (logoClickCount >= 5) {
-        logoClickCount = 0;
-        openAdminLogin();
-      }
     }
 
     function openAdminLogin() {
@@ -2267,7 +2311,7 @@
     }
     function checkAdminLogin() {
       const val = document.getElementById('adminPasswordInput').value;
-      if (val === ADMIN_PASSWORD) {
+      if (false) {
         document.getElementById('adminLoginView').classList.add('hidden');
         openAdminPanel();
       } else {
@@ -2313,10 +2357,10 @@
         <div class="card p-3.5 flex items-center justify-between gap-3 text-xs">
           <div class="min-w-0">
             <div class="flex items-center gap-2">
-              <p class="font-semibold ink serif text-[13px] truncate">${e.title}</p>
+              <p class="font-semibold ink serif text-[13px] truncate">${esc(e.title)}</p>
               <span class="text-[9px] font-semibold px-1.5 py-0.5 rounded shrink-0" style="background:color-mix(in srgb, ${tabColor} 16%, var(--surface-2)); color:${tabColor}">${eventTabLabel[tab]}</span>
             </div>
-            <p class="text-[11px] muted mt-0.5 truncate">${formatEventDate(e)} · ${e.time} · ${e.location}</p>
+            <p class="text-[11px] muted mt-0.5 truncate">${formatEventDate(e)} · ${esc(e.time)} · ${esc(e.location)}</p>
           </div>
           <div class="flex gap-1.5 shrink-0">
             <button onclick="openEventEditor('${e.id}')" class="px-3 py-2 rounded-lg surface-2 hairline border text-[11px] font-semibold ink-soft hover:accent transition">Edit</button>
@@ -2418,8 +2462,8 @@
         return `
         <div class="card p-3.5 flex items-center justify-between gap-3 text-xs">
           <div class="min-w-0">
-            <p class="font-semibold ink serif text-[13px] truncate">${c.name}</p>
-            <p class="text-[11px] muted mt-0.5 truncate">MVR ${c.price.toFixed(2)} · ${c.shop} · ${zoneShort[c.zone] || c.zone}${days !== null ? ` · verified ${days === 0 ? 'today' : days + 'd ago'}` : ''}</p>
+            <p class="font-semibold ink serif text-[13px] truncate">${esc(c.name)}</p>
+            <p class="text-[11px] muted mt-0.5 truncate">MVR ${c.price.toFixed(2)} · ${esc(c.shop)} · ${zoneShort[c.zone] || c.zone}${days !== null ? ` · verified ${days === 0 ? 'today' : days + 'd ago'}` : ''}</p>
           </div>
           <div class="flex gap-1.5 shrink-0">
             <button onclick="openPriceEditor('${c.id}')" class="px-3 py-2 rounded-lg surface-2 hairline border text-[11px] font-semibold ink-soft hover:accent transition">Edit</button>
@@ -2724,16 +2768,16 @@
       return `
         <div class="card p-4 space-y-2 text-xs">
           <div class="flex justify-between items-start gap-2">
-            <h4 class="font-semibold ink serif text-[13.5px]">${s.name}</h4>
+            <h4 class="font-semibold ink serif text-[13.5px]">${esc(s.name)}</h4>
             <span class="eyebrow surface-2 px-2 py-1 rounded-md shrink-0">${zoneShort[s.zone] || s.zone}</span>
           </div>
-          <p class="text-[11.5px] ink-soft">${s.address}</p>
+          <p class="text-[11.5px] ink-soft">${esc(s.address)}</p>
           ${compact ? '' : `
           <div class="flex flex-wrap gap-1.5 pt-1">
             ${s.freeFloorDelivery ? '<span class="text-[10px] accent-soft px-2 py-1 rounded-md">Free doorstep</span>' : ''}
             ${s.acceptsViber ? '<span class="text-[10px] surface-2 ink-soft px-2 py-1 rounded-md">Viber slip OK</span>' : ''}
           </div>
-          <p class="text-[10px] muted pt-0.5">Added by ${s.addedBy || 'Community'}</p>`}
+          <p class="text-[10px] muted pt-0.5">Added by ${esc(s.addedBy || 'Community')}</p>`}
         </div>`;
     }
 
@@ -2745,8 +2789,8 @@
       feedEvt.innerHTML = (todays.length ? todays : eventsData.filter(e => computeEventTab(e, now) !== 'past').slice(0, 2)).map(e => `
         <div class="card p-3.5 flex justify-between items-center text-xs cursor-pointer" onclick="openEventDetail('${e.id}')">
           <div class="min-w-0">
-            <p class="font-semibold ink serif text-[13px] truncate">${e.title}</p>
-            <p class="text-[11px] muted mt-0.5">${e.location} · ${e.time}</p>
+            <p class="font-semibold ink serif text-[13px] truncate">${esc(e.title)}</p>
+            <p class="text-[11px] muted mt-0.5">${esc(e.location)} · ${esc(e.time)}</p>
           </div>
           <span class="eyebrow accent-soft px-2 py-1 rounded-md shrink-0 ml-2">${zoneShort[e.zone] || e.zone}</span>
         </div>`).join('') || `<p class="text-xs muted italic">No events yet — be the first to add one.</p>`;
@@ -2787,12 +2831,12 @@
       container.innerHTML = filtered.map(e => `
         <div class="card p-4 space-y-1.5 text-xs cursor-pointer" onclick="openEventDetail('${e.id}')">
           <div class="flex justify-between items-start gap-2">
-            <h4 class="font-semibold ink serif text-[13.5px]">${e.title}</h4>
+            <h4 class="font-semibold ink serif text-[13.5px]">${esc(e.title)}</h4>
             <span class="eyebrow accent-soft px-2 py-1 rounded-md shrink-0">${zoneShort[e.zone] || e.zone}</span>
           </div>
-          <p class="text-[11.5px] ink-soft">${e.description}</p>
-          <p class="text-[11px] muted pt-1">${formatEventDate(e)} · ${e.time} · ${e.location}</p>
-          <p class="text-[10px] muted">Posted by ${e.addedBy || 'Community'}</p>
+          <p class="text-[11.5px] ink-soft">${esc(e.description)}</p>
+          <p class="text-[11px] muted pt-1">${formatEventDate(e)} · ${esc(e.time)} · ${esc(e.location)}</p>
+          <p class="text-[10px] muted">Posted by ${esc(e.addedBy || 'Community')}</p>
         </div>`).join('') ||
         `<p class="text-center text-xs muted italic py-8">Nothing here yet for this filter. Try “+ Add event”.</p>`;
     }
@@ -2809,9 +2853,9 @@
         const stale = days >= 14;
         return `
         <div class="card p-4 space-y-2 text-xs">
-          <h4 class="font-semibold ink serif text-[13.5px]">${c.name}</h4>
+          <h4 class="font-semibold ink serif text-[13.5px]">${esc(c.name)}</h4>
           <div class="receipt-line">
-            <span class="ink-soft">${c.shop}</span>
+            <span class="ink-soft">${esc(c.shop)}</span>
             <span class="font-semibold accent">MVR ${c.price.toFixed(2)}</span>
           </div>
           <div class="flex items-center justify-between pt-1.5 border-t hairline">
@@ -2827,35 +2871,29 @@
       const ranked = Object.entries(leaderboard).sort((a, b) => b[1] - a[1]).slice(0, 8);
       list.innerHTML = ranked.map(([name, pts], i) => `
         <div class="flex justify-between p-3 surface-2 rounded-lg">
-          <span class="font-semibold ink">${i + 1}. ${name}</span>
+          <span class="font-semibold ink">${i + 1}. ${esc(name)}</span>
           <span class="accent font-semibold">${pts.toLocaleString()} pts</span>
         </div>`).join('') || `<p class="text-xs muted italic">No contributors yet.</p>`;
     }
 
     // ---------- Add Place ----------
     function openAddPlace() { toggleModal('addPlaceModal'); }
-    async function submitPlace() {
+    function submitPlace() {
       const name = document.getElementById('placeName').value.trim();
       const address = document.getElementById('placeAddress').value.trim();
       if (!name || !address) { showToast('Add a name and address first'); return; }
-      const shop = {
-        id: 's' + Date.now(), name, address,
+      openSubmission('place', {
+        name, address,
         category: document.getElementById('placeCategory').value,
         zone: document.getElementById('placeZone').value,
         freeFloorDelivery: document.getElementById('placeFloor').checked,
-        acceptsViber: document.getElementById('placeViber').checked,
-        addedBy: YOU
-      };
-      shopsData.unshift(shop);
-      await saveShops();
-      awardPoints(YOU, 10);
+        acceptsViber: document.getElementById('placeViber').checked
+      }, name);
       ['placeName', 'placeAddress'].forEach(id => document.getElementById(id).value = '');
       document.getElementById('placeFloor').checked = false;
       document.getElementById('placeViber').checked = false;
       toggleModal('addPlaceModal');
-      switchTab('directory');
-      renderAll();
-      showToast('Place added — +10 points!');
+      showToast('Finish on GitHub — it goes live once approved');
     }
 
     // ---------- Add Event ----------
@@ -2864,56 +2902,35 @@
       if (dateEl && !dateEl.value) dateEl.value = isoDate(todayDateOnly());
       toggleModal('addEventModal');
     }
-    async function submitEvent() {
+    function submitEvent() {
       const title = document.getElementById('eventTitle').value.trim();
       const location = document.getElementById('eventLocation').value.trim();
       const time = document.getElementById('eventTime').value.trim();
       if (!title || !location || !time) { showToast('Fill in title, location & time'); return; }
-      const startDate = document.getElementById('eventStartDate').value || isoDate(todayDateOnly());
-      const event = {
-        id: 'e' + Date.now(), title,
-        description: document.getElementById('eventDesc').value.trim() || 'No description provided.',
-        location, time,
-        hostedBy: document.getElementById('eventHostedBy').value.trim() || null,
+      openSubmission('event', {
+        title, location, time,
+        description: document.getElementById('eventDesc').value.trim(),
+        hostedBy: document.getElementById('eventHostedBy').value.trim(),
         zone: document.getElementById('eventZone').value,
-        startDate, endDate: null,
-        addedBy: YOU
-      };
-      eventsData.unshift(event);
-      await saveEvents();
-      awardPoints(YOU, 10);
+        startDate: document.getElementById('eventStartDate').value || isoDate(todayDateOnly())
+      }, title);
       ['eventTitle', 'eventDesc', 'eventLocation', 'eventTime', 'eventHostedBy'].forEach(id => document.getElementById(id).value = '');
       document.getElementById('eventStartDate').value = '';
       toggleModal('addEventModal');
-      switchTab('events');
-      renderAll();
-      tickEventCountdown();
-      showToast('Event submitted — +10 points!');
+      showToast('Finish on GitHub — it goes live once approved');
     }
 
-    // ---------- Receipt Scan ----------
-    function startSimulatedScan() {
+    // ---------- Submit a price (from a receipt) ----------
+    function submitPrice() {
       const name = document.getElementById('scanItemName').value.trim();
       const price = parseFloat(document.getElementById('scanItemPrice').value);
       const shop = document.getElementById('scanItemShop').value.trim();
       const zone = document.getElementById('scanItemZone').value;
       if (!name || !shop || isNaN(price) || price <= 0) { showToast('Fill in item, price & shop'); return; }
-
-      document.getElementById('scannerIdleView').classList.add('hidden');
-      document.getElementById('scannerActiveView').classList.remove('hidden');
-
-      setTimeout(async () => {
-        commoditiesData.unshift({ id: 'c' + Date.now(), name, price, shop, zone, addedBy: YOU, ts: Date.now() });
-        await saveCommodities();
-        awardPoints(YOU, 15);
-        document.getElementById('scannerActiveView').classList.add('hidden');
-        document.getElementById('scannerIdleView').classList.remove('hidden');
-        ['scanItemName', 'scanItemPrice', 'scanItemShop'].forEach(id => document.getElementById(id).value = '');
-        toggleModal('scannerModal');
-        switchTab('priceWiki');
-        renderAll();
-        showToast('Receipt processed — +15 points!');
-      }, 1600);
+      openSubmission('price', { name, price, shop, zone }, `${name} — MVR ${price.toFixed(2)}`);
+      ['scanItemName', 'scanItemPrice', 'scanItemShop'].forEach(id => document.getElementById(id).value = '');
+      toggleModal('scannerModal');
+      showToast('Finish on GitHub — it goes live once approved');
     }
   </script>
 </body>
